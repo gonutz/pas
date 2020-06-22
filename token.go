@@ -21,7 +21,10 @@ const (
 )
 
 func (t token) String() string {
-	return fmt.Sprintf("%v: %q at %d:%d", t.tokenType, t.text, t.line, t.col)
+	if string(t.tokenType) == t.text || t.text == "" {
+		return fmt.Sprintf("%v at %d:%d", t.tokenType, t.line, t.col)
+	}
+	return fmt.Sprintf("%v %q at %d:%d", t.tokenType, t.text, t.line, t.col)
 }
 
 func (t tokenType) String() string {

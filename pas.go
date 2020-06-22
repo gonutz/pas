@@ -5,8 +5,9 @@ func ParseString(code string) (*File, error) {
 }
 
 type File struct {
-	Kind FileKind
-	Name string
+	Kind     FileKind
+	Name     string
+	Sections []FileSection
 }
 
 type FileKind int
@@ -29,4 +30,31 @@ func (k FileKind) String() string {
 		return "package"
 	}
 	return "unknown FileKind"
+}
+
+type FileSection struct {
+	Kind FileSectionKind
+	Uses []string
+}
+
+type FileSectionKind int
+
+const (
+	InterfaceSection      FileSectionKind = 0
+	ImplementationSection FileSectionKind = 1
+	InitializationSection FileSectionKind = 2
+	FinalizationSection   FileSectionKind = 3
+)
+
+func (k FileSectionKind) String() string {
+	if k == InterfaceSection {
+		return "interface"
+	} else if k == ImplementationSection {
+		return "implementation"
+	} else if k == InitializationSection {
+		return "initialization"
+	} else if k == FinalizationSection {
+		return "finalization"
+	}
+	return "unknown FileSectionKind"
 }

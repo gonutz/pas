@@ -11,7 +11,12 @@ func newParser(code []rune) *parser {
 
 type parser struct {
 	tokens tokenizer
-	err    error
+	// isPeeking and peekingAt are a one-element queue of tokens to come. The
+	// tokenizer only gives us the next token, it cannot peek so we buffer one
+	// token here. See parser.nextToken and parser.peekToken.
+	isPeeking bool
+	peekingAt token
+	err       error
 }
 
 func (p *parser) parseFile() (*File, error) {
@@ -20,19 +25,84 @@ func (p *parser) parseFile() (*File, error) {
 	unit.Kind = Unit
 	unit.Name = p.identifier("unit name")
 	p.eat(';')
+
 	p.eatWord("interface")
+	unit.Sections = append(unit.Sections, FileSection{
+		Kind: InterfaceSection,
+		Uses: p.parserOptionalUses(),
+	})
+
 	p.eatWord("implementation")
+	unit.Sections = append(unit.Sections, FileSection{
+		Kind: ImplementationSection,
+		Uses: p.parserOptionalUses(),
+	})
+
 	p.eatWord("end")
 	p.eat('.')
 	return &unit, p.err
 }
 
+func (p *parser) parserOptionalUses() []string {
+	var uses []string
+	if p.seesWord("uses") {
+		p.eatWord("uses")
+		uses = append(uses, p.parseUseClause())
+		for p.sees(',') {
+			p.eat(',')
+			uses = append(uses, p.parseUseClause())
+		}
+		p.eat(';')
+	}
+	return uses
+}
+
+func (p *parser) parseUseClause() string {
+	s := p.identifier("uses clause")
+	for p.sees('.') {
+		p.eat('.')
+		s += "." + p.identifier("uses clause")
+	}
+	return s
+}
+
 func (p *parser) nextToken() token {
+	if p.isPeeking {
+		// Remove the queued token from our peek queue.
+		p.isPeeking = false
+		return p.peekingAt
+	}
+
+	// Find the next token which is not a white-space.
 	t := p.tokens.next()
 	for t.tokenType == tokenWhiteSpace {
 		t = p.tokens.next()
 	}
 	return t
+}
+
+func (p *parser) peekToken() token {
+	if !p.isPeeking {
+		p.peekingAt = p.nextToken()
+		p.isPeeking = true
+	}
+	return p.peekingAt
+}
+
+func (p *parser) sees(typ tokenType) bool {
+	if p.err != nil {
+		return false
+	}
+	t := p.peekToken()
+	return t.tokenType == typ
+}
+
+func (p *parser) seesWord(text string) bool {
+	if p.err != nil {
+		return false
+	}
+	t := p.peekToken()
+	return t.tokenType == tokenWord && strings.ToLower(t.text) == text
 }
 
 func (p *parser) eat(typ tokenType) {
@@ -51,7 +121,7 @@ func (p *parser) eatWord(text string) {
 	}
 	t := p.nextToken()
 	if !(t.tokenType == tokenWord && strings.ToLower(t.text) == text) {
-		p.tokenError(t, "keyword "+text)
+		p.tokenError(t, `keyword "`+text+`"`)
 	}
 }
 
@@ -68,5 +138,5 @@ func (p *parser) identifier(description string) string {
 }
 
 func (p *parser) tokenError(t token, expected string) {
-	p.err = errors.New(expected + " expected but was " + t.tokenType.String())
+	p.err = errors.New(expected + " expected but was " + t.String())
 }

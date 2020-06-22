@@ -11,31 +11,65 @@ import (
 func TestUnitMustHaveInterfaceAndImplementationSections(t *testing.T) {
 	parseError(t,
 		"",
-		`keyword unit expected but was end of file`,
+		`keyword "unit" expected but was end of file at 1:1`,
 	)
 	parseError(t,
 		"unit",
-		`unit name expected but was end of file`,
+		`unit name expected but was end of file at 1:5`,
 	)
 	parseError(t,
 		"unit U",
-		`token ";" expected but was end of file`,
+		`token ";" expected but was end of file at 1:7`,
 	)
 	parseError(t,
 		"unit U;",
-		`keyword interface expected but was end of file`,
+		`keyword "interface" expected but was end of file at 1:8`,
 	)
 	parseError(t,
 		"unit U;interface",
-		`keyword implementation expected but was end of file`,
+		`keyword "implementation" expected but was end of file at 1:17`,
 	)
 	parseError(t,
 		"unit U;interface implementation",
-		`keyword end expected but was end of file`,
+		`keyword "end" expected but was end of file at 1:32`,
 	)
 	parseError(t,
 		"unit U;interface implementation end",
-		`token "." expected but was end of file`,
+		`token "." expected but was end of file at 1:36`,
+	)
+}
+
+func TestIncompleteUses(t *testing.T) {
+	// Valid code that we break at different points:
+	//
+	//     unit U;interface uses GR32, System.StrUtils; implementation end.
+	parseError(t,
+		"unit U;interface uses GR32, System.StrUtils implementation end.",
+		`token ";" expected but was word "implementation" at 1:45`,
+	)
+	parseError(t,
+		"unit U;interface uses GR32, System.; implementation end.",
+		`uses clause expected but was token ";" at 1:36`,
+	)
+	parseError(t,
+		"unit U;interface uses GR32, ; implementation end.",
+		`uses clause expected but was token ";" at 1:29`,
+	)
+	parseError(t,
+		"unit U;interface uses GR32 System.StrUtils; implementation end.",
+		`token ";" expected but was word "System" at 1:28`,
+	)
+	parseError(t,
+		"unit U;interface uses , System.StrUtils; implementation end.",
+		`uses clause expected but was token "," at 1:23`,
+	)
+	parseError(t,
+		"unit U;interface uses ; implementation end.",
+		`uses clause expected but was token ";" at 1:23`,
+	)
+	parseError(t,
+		"unit U;interface uses implementation end.",
+		`token ";" expected but was word "end" at 1:38`,
 	)
 }
 
