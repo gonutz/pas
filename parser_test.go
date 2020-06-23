@@ -24,6 +24,22 @@ func TestParseEmptyUnit(t *testing.T) {
 		})
 }
 
+func TestUnitWithDotsInName(t *testing.T) {
+	parseFile(t,
+		`unit U.V.W;
+	interface
+	implementation
+	end.`,
+		&pas.File{
+			Kind: pas.Unit,
+			Name: "U.V.W",
+			Sections: []pas.FileSection{
+				{Kind: pas.InterfaceSection},
+				{Kind: pas.ImplementationSection},
+			},
+		})
+}
+
 func TestParseUses(t *testing.T) {
 	parseFile(t, `
   unit U;
@@ -53,6 +69,33 @@ func TestParseUses(t *testing.T) {
 				},
 			},
 		})
+}
+
+func TestParseEmptyClass(t *testing.T) {
+	parseFile(t, `
+  unit U;
+  interface
+  type C = class end;
+  implementation
+  end.`,
+		&pas.File{
+			Kind: pas.Unit,
+			Name: "U",
+			Sections: []pas.FileSection{
+				{
+					Kind: pas.InterfaceSection,
+					Blocks: []pas.FileSectionBlock{
+						pas.TypeBlock{
+							pas.Class{
+								Name: "C",
+							},
+						},
+					},
+				},
+				{Kind: pas.ImplementationSection},
+			},
+		},
+	)
 }
 
 func parseFile(t *testing.T, code string, want *pas.File) {

@@ -16,54 +16,62 @@ type parser struct {
 	// token here. See parser.nextToken and parser.peekToken.
 	isPeeking bool
 	peekingAt token
+	file      File
 	err       error
 }
 
 func (p *parser) parseFile() (*File, error) {
-	var unit File // For now only parse units until we have tests for other kinds.
+	// For now only parse units until we have tests for other kinds.
 	p.eatWord("unit")
-	unit.Kind = Unit
-	unit.Name = p.identifier("unit name")
+	p.file.Kind = Unit
+	p.file.Name = p.dottedIdentifier("unit name")
 	p.eat(';')
 
 	p.eatWord("interface")
-	unit.Sections = append(unit.Sections, FileSection{
-		Kind: InterfaceSection,
-		Uses: p.parserOptionalUses(),
-	})
+	p.parseFileSection(InterfaceSection)
 
 	p.eatWord("implementation")
-	unit.Sections = append(unit.Sections, FileSection{
-		Kind: ImplementationSection,
-		Uses: p.parserOptionalUses(),
-	})
+	p.parseFileSection(ImplementationSection)
 
 	p.eatWord("end")
 	p.eat('.')
-	return &unit, p.err
+	return &p.file, p.err
 }
 
-func (p *parser) parserOptionalUses() []string {
+func (p *parser) parseFileSection(kind FileSectionKind) {
+	p.file.Sections = append(p.file.Sections, FileSection{
+		Kind:   kind,
+		Uses:   p.parseOptionalUses(),
+		Blocks: p.parseSectionBlocks(),
+	})
+}
+
+func (p *parser) parseSectionBlocks() []FileSectionBlock {
+	var blocks []FileSectionBlock
+	if p.seesWord("type") {
+		p.eatWord("type")
+		name := p.identifier("type name")
+		p.eat('=')
+		p.eatWord("class")
+		p.eatWord("end")
+		p.eat(';')
+		blocks = append(blocks, TypeBlock{Class{Name: name}})
+	}
+	return blocks
+}
+
+func (p *parser) parseOptionalUses() []string {
 	var uses []string
 	if p.seesWord("uses") {
 		p.eatWord("uses")
-		uses = append(uses, p.parseUseClause())
+		uses = append(uses, p.dottedIdentifier("uses clause"))
 		for p.sees(',') {
 			p.eat(',')
-			uses = append(uses, p.parseUseClause())
+			uses = append(uses, p.dottedIdentifier("uses clause"))
 		}
 		p.eat(';')
 	}
 	return uses
-}
-
-func (p *parser) parseUseClause() string {
-	s := p.identifier("uses clause")
-	for p.sees('.') {
-		p.eat('.')
-		s += "." + p.identifier("uses clause")
-	}
-	return s
 }
 
 func (p *parser) nextToken() token {
@@ -123,6 +131,15 @@ func (p *parser) eatWord(text string) {
 	if !(t.tokenType == tokenWord && strings.ToLower(t.text) == text) {
 		p.tokenError(t, `keyword "`+text+`"`)
 	}
+}
+
+func (p *parser) dottedIdentifier(description string) string {
+	s := p.identifier(description)
+	for p.sees('.') {
+		p.eat('.')
+		s += "." + p.identifier(description)
+	}
+	return s
 }
 
 func (p *parser) identifier(description string) string {

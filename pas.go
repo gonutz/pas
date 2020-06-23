@@ -33,8 +33,9 @@ func (k FileKind) String() string {
 }
 
 type FileSection struct {
-	Kind FileSectionKind
-	Uses []string
+	Kind   FileSectionKind
+	Uses   []string
+	Blocks []FileSectionBlock
 }
 
 type FileSectionKind int
@@ -57,4 +58,22 @@ func (k FileSectionKind) String() string {
 		return "finalization"
 	}
 	return "unknown FileSectionKind"
+}
+
+type FileSectionBlock interface {
+	isFileSectionBlock()
+}
+
+func (TypeBlock) isFileSectionBlock() {}
+
+type TypeBlock []TypeDeclaration
+
+type TypeDeclaration interface {
+	isTypeDeclaration()
+}
+
+func (Class) isTypeDeclaration() {}
+
+type Class struct {
+	Name string
 }
