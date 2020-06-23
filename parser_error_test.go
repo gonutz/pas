@@ -83,7 +83,7 @@ func TestIncompleteTypeBlock(t *testing.T) {
 	)
 	parseError(t,
 		"unit U;interface type C=class(A,B) ; implementation end.",
-		`keyword "end" expected but was token ";" at 1:36`,
+		`field name expected but was token ";" at 1:36`,
 	)
 	parseError(t,
 		"unit U;interface type C=class(A,B end; implementation end.",
@@ -112,6 +112,28 @@ func TestIncompleteTypeBlock(t *testing.T) {
 	parseError(t,
 		"unit U;interface type =class(A,B) end; implementation end.",
 		`type name expected but was token "=" at 1:23`,
+	)
+}
+
+func TestIncompleteVarInClass(t *testing.T) {
+	// Valid code that we break at different points:
+	//
+	//     unit U;interface type C=class A:Integer; end; implementation end.
+	parseError(t,
+		"unit U;interface type C=class A:Integer end; implementation end.",
+		`token ";" expected but was word "end" at 1:41`,
+	)
+	parseError(t,
+		"unit U;interface type C=class A:; end; implementation end.",
+		`type name expected but was token ";" at 1:33`,
+	)
+	parseError(t,
+		"unit U;interface type C=class A Integer; end; implementation end.",
+		`token ":" expected but was word "Integer" at 1:33`,
+	)
+	parseError(t,
+		"unit U;interface type C=class :Integer; end; implementation end.",
+		`field name expected but was token ":" at 1:31`,
 	)
 }
 

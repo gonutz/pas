@@ -126,6 +126,40 @@ func TestParseInheritingClass(t *testing.T) {
 	)
 }
 
+func TestParseClassFields(t *testing.T) {
+	parseFile(t, `
+  unit U;
+  interface
+  type C = class
+    A: Integer;
+    B: C.D;
+  end;
+  implementation
+  end.`,
+		&pas.File{
+			Kind: pas.Unit,
+			Name: "U",
+			Sections: []pas.FileSection{
+				{
+					Kind: pas.InterfaceSection,
+					Blocks: []pas.FileSectionBlock{
+						pas.TypeBlock{
+							pas.Class{
+								Name: "C",
+								Fields: []pas.Var{
+									{Name: "A", Type: "Integer"},
+									{Name: "B", Type: "C.D"},
+								},
+							},
+						},
+					},
+				},
+				{Kind: pas.ImplementationSection},
+			},
+		},
+	)
+}
+
 func parseFile(t *testing.T, code string, want *pas.File) {
 	t.Helper()
 	code = strings.Replace(code, "\n", "\r\n", -1)

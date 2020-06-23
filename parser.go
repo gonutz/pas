@@ -69,6 +69,14 @@ func (p *parser) parseSectionBlocks() []FileSectionBlock {
 			}
 			p.eat(')')
 		}
+		for !(p.seesWord("end") || p.err != nil) {
+			var v Var
+			v.Name = p.identifier("field name")
+			p.eat(':')
+			v.Type = p.qualifiedIdentifier("type name")
+			p.eat(';')
+			class.Fields = append(class.Fields, v)
+		}
 		p.eatWord("end")
 		p.eat(';')
 		blocks = append(blocks, TypeBlock{class})

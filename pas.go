@@ -77,4 +77,10 @@ func (Class) isTypeDeclaration() {}
 type Class struct {
 	Name         string
 	SuperClasses []string
+	Fields       []Var
+}
+
+type Var struct {
+	Name string
+	Type string
 }

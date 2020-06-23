@@ -34,7 +34,7 @@ func (t *tokenizer) next() token {
 			line:      line,
 			col:       col,
 		}
-	case ';', '.', ',', '=', '(', ')':
+	case ';', ':', '.', ',', '=', '(', ')':
 		t.nextRune()
 		haveType = tokenType(r)
 	default:
