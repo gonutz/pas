@@ -24,7 +24,7 @@ func (p *parser) parseFile() (*File, error) {
 	// For now only parse units until we have tests for other kinds.
 	p.eatWord("unit")
 	p.file.Kind = Unit
-	p.file.Name = p.dottedIdentifier("unit name")
+	p.file.Name = p.qualifiedIdentifier("unit name")
 	p.eat(';')
 
 	p.eatWord("interface")
@@ -64,10 +64,10 @@ func (p *parser) parseOptionalUses() []string {
 	var uses []string
 	if p.seesWord("uses") {
 		p.eatWord("uses")
-		uses = append(uses, p.dottedIdentifier("uses clause"))
+		uses = append(uses, p.qualifiedIdentifier("uses clause"))
 		for p.sees(',') {
 			p.eat(',')
-			uses = append(uses, p.dottedIdentifier("uses clause"))
+			uses = append(uses, p.qualifiedIdentifier("uses clause"))
 		}
 		p.eat(';')
 	}
@@ -133,7 +133,12 @@ func (p *parser) eatWord(text string) {
 	}
 }
 
-func (p *parser) dottedIdentifier(description string) string {
+// qualifiedIdentifier parses identifiers with dots in them, e.g.
+//
+//     Systems.Generics.Collections
+//
+// There might be comments or white space between the identifiers and dots.
+func (p *parser) qualifiedIdentifier(description string) string {
 	s := p.identifier(description)
 	for p.sees('.') {
 		p.eat('.')
