@@ -75,5 +75,6 @@ type TypeDeclaration interface {
 func (Class) isTypeDeclaration() {}
 
 type Class struct {
-	Name string
+	Name         string
+	SuperClasses []string
 }

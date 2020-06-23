@@ -50,12 +50,28 @@ func (p *parser) parseSectionBlocks() []FileSectionBlock {
 	var blocks []FileSectionBlock
 	if p.seesWord("type") {
 		p.eatWord("type")
-		name := p.identifier("type name")
+		var class Class
+		class.Name = p.identifier("type name")
 		p.eat('=')
 		p.eatWord("class")
+		if p.sees('(') {
+			p.eat('(')
+			class.SuperClasses = append(
+				class.SuperClasses,
+				p.qualifiedIdentifier("parent class name"),
+			)
+			for p.sees(',') {
+				p.eat(',')
+				class.SuperClasses = append(
+					class.SuperClasses,
+					p.qualifiedIdentifier("parent interface name"),
+				)
+			}
+			p.eat(')')
+		}
 		p.eatWord("end")
 		p.eat(';')
-		blocks = append(blocks, TypeBlock{Class{Name: name}})
+		blocks = append(blocks, TypeBlock{class})
 	}
 	return blocks
 }

@@ -76,25 +76,41 @@ func TestIncompleteUses(t *testing.T) {
 func TestIncompleteTypeBlock(t *testing.T) {
 	// Valid code that we break at different points:
 	//
-	//     unit U;interface type C=class end; implementation end.
+	//     unit U;interface type C=class(A,B) end; implementation end.
 	parseError(t,
-		"unit U;interface type C=class end implementation end.",
-		`token ";" expected but was word "implementation" at 1:35`,
+		"unit U;interface type C=class(A,B) end implementation end.",
+		`token ";" expected but was word "implementation" at 1:40`,
 	)
 	parseError(t,
-		"unit U;interface type C=class ; implementation end.",
-		`keyword "end" expected but was token ";" at 1:31`,
+		"unit U;interface type C=class(A,B) ; implementation end.",
+		`keyword "end" expected but was token ";" at 1:36`,
 	)
 	parseError(t,
-		"unit U;interface type C= end; implementation end.",
-		`keyword "class" expected but was word "end" at 1:26`,
+		"unit U;interface type C=class(A,B end; implementation end.",
+		`token ")" expected but was word "end" at 1:35`,
 	)
 	parseError(t,
-		"unit U;interface type C class end; implementation end.",
+		"unit U;interface type C=class(A,) end; implementation end.",
+		`parent interface name expected but was token ")" at 1:33`,
+	)
+	parseError(t,
+		"unit U;interface type C=class(A B) end; implementation end.",
+		`token ")" expected but was word "B" at 1:33`,
+	)
+	parseError(t,
+		"unit U;interface type C=class(,B) end; implementation end.",
+		`parent class name expected but was token "," at 1:31`,
+	)
+	parseError(t,
+		"unit U;interface type C=A,B) end; implementation end.",
+		`keyword "class" expected but was word "A" at 1:25`,
+	)
+	parseError(t,
+		"unit U;interface type C class(A,B) end; implementation end.",
 		`token "=" expected but was word "class" at 1:25`,
 	)
 	parseError(t,
-		"unit U;interface type =class end; implementation end.",
+		"unit U;interface type =class(A,B) end; implementation end.",
 		`type name expected but was token "=" at 1:23`,
 	)
 }

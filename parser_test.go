@@ -98,6 +98,34 @@ func TestParseEmptyClass(t *testing.T) {
 	)
 }
 
+func TestParseInheritingClass(t *testing.T) {
+	parseFile(t, `
+  unit U;
+  interface
+  type G = class(A, B.C, D.E.F) end;
+  implementation
+  end.`,
+		&pas.File{
+			Kind: pas.Unit,
+			Name: "U",
+			Sections: []pas.FileSection{
+				{
+					Kind: pas.InterfaceSection,
+					Blocks: []pas.FileSectionBlock{
+						pas.TypeBlock{
+							pas.Class{
+								Name:         "G",
+								SuperClasses: []string{"A", "B.C", "D.E.F"},
+							},
+						},
+					},
+				},
+				{Kind: pas.ImplementationSection},
+			},
+		},
+	)
+}
+
 func parseFile(t *testing.T, code string, want *pas.File) {
 	t.Helper()
 	code = strings.Replace(code, "\n", "\r\n", -1)
