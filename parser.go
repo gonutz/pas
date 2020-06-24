@@ -48,8 +48,7 @@ func (p *parser) parseFileSection(kind FileSectionKind) {
 
 func (p *parser) parseSectionBlocks() []FileSectionBlock {
 	var blocks []FileSectionBlock
-	if p.seesWord("type") {
-		p.eatWord("type")
+	if p.seesWordAndEat("type") {
 		var class Class
 		class.Name = p.identifier("type name")
 		p.eat('=')
@@ -70,12 +69,19 @@ func (p *parser) parseSectionBlocks() []FileSectionBlock {
 			p.eat(')')
 		}
 		for !(p.seesWord("end") || p.err != nil) {
-			var v Var
-			v.Name = p.identifier("field name")
-			p.eat(':')
-			v.Type = p.qualifiedIdentifier("type name")
-			p.eat(';')
-			class.Fields = append(class.Fields, v)
+			if p.seesWordAndEat("published") {
+				class.newSection(Published)
+			} else if p.seesWordAndEat("public") {
+				class.newSection(Public)
+			} else if p.seesWordAndEat("protected") {
+				class.newSection(Protected)
+			} else if p.seesWordAndEat("private") {
+				class.newSection(Private)
+			} else if p.seesWordAndEat("procedure") || p.seesWordAndEat("function") {
+				class.appendMemberToCurrentSection(p.parseFunctionDeclaration())
+			} else {
+				class.appendMemberToCurrentSection(p.parseVariableDeclaration())
+			}
 		}
 		p.eatWord("end")
 		p.eat(';')
@@ -84,10 +90,72 @@ func (p *parser) parseSectionBlocks() []FileSectionBlock {
 	return blocks
 }
 
+func (p *parser) parseFunctionDeclaration() ClassMember {
+	var f Function
+	f.Name = p.identifier("function name")
+	if p.sees('(') {
+		p.eat('(')
+		for p.sees(tokenWord) || p.sees('[') {
+			var param Parameter
+
+			if p.seesWordAndEat("var") {
+				param.Qualifier = Var
+			} else if p.seesWordAndEat("const") {
+				param.Qualifier = Const
+				if p.sees('[') {
+					p.eat('[')
+					p.eatWord("ref")
+					p.eat(']')
+					param.Qualifier = ConstRef
+				}
+			} else if p.seesWordAndEat("out") {
+				param.Qualifier = Out
+			} else if p.sees('[') {
+				p.eat('[')
+				p.eatWord("ref")
+				p.eat(']')
+				p.eatWord("const")
+				param.Qualifier = RefConst
+			}
+
+			param.Names = append(param.Names, p.identifier("parameter name"))
+			for p.sees(',') {
+				p.eat(',')
+				param.Names = append(param.Names, p.identifier("parameter name"))
+			}
+			if p.sees(':') {
+				p.eat(':')
+				param.Type = p.qualifiedIdentifier("parameter type")
+			}
+			f.Parameters = append(f.Parameters, param)
+			if p.sees(';') {
+				p.eat(';')
+			} else {
+				break
+			}
+		}
+		p.eat(')')
+	}
+	if p.sees(':') {
+		p.eat(':')
+		f.Returns = p.qualifiedIdentifier("return type")
+	}
+	p.eat(';')
+	return f
+}
+
+func (p *parser) parseVariableDeclaration() ClassMember {
+	var v Variable
+	v.Name = p.identifier("field name")
+	p.eat(':')
+	v.Type = p.qualifiedIdentifier("type name")
+	p.eat(';')
+	return v
+}
+
 func (p *parser) parseOptionalUses() []string {
 	var uses []string
-	if p.seesWord("uses") {
-		p.eatWord("uses")
+	if p.seesWordAndEat("uses") {
 		uses = append(uses, p.qualifiedIdentifier("uses clause"))
 		for p.sees(',') {
 			p.eat(',')
@@ -135,6 +203,18 @@ func (p *parser) seesWord(text string) bool {
 	}
 	t := p.peekToken()
 	return t.tokenType == tokenWord && strings.ToLower(t.text) == text
+}
+
+func (p *parser) seesWordAndEat(text string) bool {
+	if p.err != nil {
+		return false
+	}
+	t := p.peekToken()
+	if t.tokenType == tokenWord && strings.ToLower(t.text) == text {
+		p.nextToken()
+		return true
+	}
+	return false
 }
 
 func (p *parser) eat(typ tokenType) {

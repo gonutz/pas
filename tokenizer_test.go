@@ -4,7 +4,7 @@ import "testing"
 
 func TestTokenize(t *testing.T) {
 	checkTokens(t,
-		`unit, U=();: end.%`,
+		`unit, U=()[];: end.%`,
 		tok(tokenWord, "unit"),
 		tok(',', ","),
 		tok(tokenWhiteSpace, " "),
@@ -12,6 +12,8 @@ func TestTokenize(t *testing.T) {
 		tok('=', "="),
 		tok('(', "("),
 		tok(')', ")"),
+		tok('[', "["),
+		tok(']', "]"),
 		tok(';', ";"),
 		tok(':', ":"),
 		tok(tokenWhiteSpace, " "),

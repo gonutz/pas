@@ -137,6 +137,25 @@ func TestIncompleteVarInClass(t *testing.T) {
 	)
 }
 
+func TestIncompleteClassFunctions(t *testing.T) {
+	parseError(t,
+		"unit U;interface type C=class procedure( end; implementation end.",
+		`function name expected but was token "(" at 1:40`,
+	)
+	// The following test parses a procedure named "end" and expectes the class
+	// field "implementation" to be followed by a type, e.g. ": Integer".
+	// TODO This is not a good message for this error.
+	parseError(t,
+		"unit U;interface type C=class procedure end; implementation end.",
+		`token ":" expected but was word "end" at 1:61`,
+	)
+	// The same as above happens here.
+	parseError(t,
+		"unit U;interface type C=class function A: end; implementation end.",
+		`token ":" expected but was word "end" at 1:63`,
+	)
+}
+
 func parseError(t *testing.T, code, wantMessage string) {
 	t.Helper()
 	code = strings.Replace(code, "\n", "\r\n", -1)
