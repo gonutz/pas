@@ -48,46 +48,66 @@ func (p *parser) parseFileSection(kind FileSectionKind) {
 
 func (p *parser) parseSectionBlocks() []FileSectionBlock {
 	var blocks []FileSectionBlock
-	if p.seesWordAndEat("type") {
-		var class Class
-		class.Name = p.identifier("type name")
-		p.eat('=')
-		p.eatWord("class")
-		if p.sees('(') {
-			p.eat('(')
-			class.SuperClasses = append(
-				class.SuperClasses,
-				p.qualifiedIdentifier("parent class name"),
-			)
-			for p.sees(',') {
-				p.eat(',')
-				class.SuperClasses = append(
-					class.SuperClasses,
-					p.qualifiedIdentifier("parent interface name"),
-				)
-			}
-			p.eat(')')
+	for {
+		if p.seesWord("type") {
+			blocks = append(blocks, p.parseTypeBlock())
+		} else if p.seesWord("var") {
+			blocks = append(blocks, p.parseVarBlock())
+		} else {
+			break
 		}
-		for !(p.seesWord("end") || p.err != nil) {
-			if p.seesWordAndEat("published") {
-				class.newSection(Published)
-			} else if p.seesWordAndEat("public") {
-				class.newSection(Public)
-			} else if p.seesWordAndEat("protected") {
-				class.newSection(Protected)
-			} else if p.seesWordAndEat("private") {
-				class.newSection(Private)
-			} else if p.seesWordAndEat("procedure") || p.seesWordAndEat("function") {
-				class.appendMemberToCurrentSection(p.parseFunctionDeclaration())
-			} else {
-				class.appendMemberToCurrentSection(p.parseVariableDeclaration())
-			}
-		}
-		p.eatWord("end")
-		p.eat(';')
-		blocks = append(blocks, TypeBlock{class})
 	}
 	return blocks
+}
+
+func (p *parser) parseTypeBlock() FileSectionBlock {
+	p.eatWord("type")
+	var class Class
+	class.Name = p.identifier("type name")
+	p.eat('=')
+	p.eatWord("class")
+	if p.sees('(') {
+		p.eat('(')
+		class.SuperClasses = append(
+			class.SuperClasses,
+			p.qualifiedIdentifier("parent class name"),
+		)
+		for p.sees(',') {
+			p.eat(',')
+			class.SuperClasses = append(
+				class.SuperClasses,
+				p.qualifiedIdentifier("parent interface name"),
+			)
+		}
+		p.eat(')')
+	}
+	for !(p.seesWord("end") || p.err != nil) {
+		if p.seesWordAndEat("published") {
+			class.newSection(Published)
+		} else if p.seesWordAndEat("public") {
+			class.newSection(Public)
+		} else if p.seesWordAndEat("protected") {
+			class.newSection(Protected)
+		} else if p.seesWordAndEat("private") {
+			class.newSection(Private)
+		} else if p.seesWordAndEat("procedure") || p.seesWordAndEat("function") {
+			class.appendMemberToCurrentSection(p.parseFunctionDeclaration())
+		} else {
+			class.appendMemberToCurrentSection(p.parseVariableDeclaration())
+		}
+	}
+	p.eatWord("end")
+	p.eat(';')
+	return TypeBlock{class}
+}
+
+func (p *parser) parseVarBlock() FileSectionBlock {
+	p.eatWord("var")
+	var vars VarBlock
+	for p.sees(tokenWord) && !p.seesKeyword() {
+		vars = append(vars, p.parseVariableDeclaration())
+	}
+	return vars
 }
 
 func (p *parser) parseFunctionDeclaration() ClassMember {
@@ -144,7 +164,7 @@ func (p *parser) parseFunctionDeclaration() ClassMember {
 	return f
 }
 
-func (p *parser) parseVariableDeclaration() ClassMember {
+func (p *parser) parseVariableDeclaration() Variable {
 	var v Variable
 	v.Name = p.identifier("field name")
 	p.eat(':')
@@ -215,6 +235,19 @@ func (p *parser) seesWordAndEat(text string) bool {
 		return true
 	}
 	return false
+}
+
+func (p *parser) seesKeyword() bool {
+	if p.err != nil {
+		return false
+	}
+	t := p.peekToken()
+	return t.tokenType == tokenWord && isKeyword(strings.ToLower(t.text))
+}
+
+func isKeyword(s string) bool {
+	// TODO Complete the list of keywords, these end blocks (var, type, ...).
+	return s == "implementation" || s == "var"
 }
 
 func (p *parser) eat(typ tokenType) {

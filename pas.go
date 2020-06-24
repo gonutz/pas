@@ -65,8 +65,11 @@ type FileSectionBlock interface {
 }
 
 func (TypeBlock) isFileSectionBlock() {}
+func (VarBlock) isFileSectionBlock()  {}
 
 type TypeBlock []TypeDeclaration
+
+type VarBlock []Variable
 
 type TypeDeclaration interface {
 	isTypeDeclaration()

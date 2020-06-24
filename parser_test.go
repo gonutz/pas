@@ -9,11 +9,11 @@ import (
 )
 
 func TestParseEmptyUnit(t *testing.T) {
-	parseFile(t,
-		`unit U;
-	interface
-	implementation
-	end.`,
+	parseFile(t, `
+  unit U;
+  interface
+  implementation
+  end.`,
 		&pas.File{
 			Kind: pas.Unit,
 			Name: "U",
@@ -25,11 +25,11 @@ func TestParseEmptyUnit(t *testing.T) {
 }
 
 func TestUnitWithDotsInName(t *testing.T) {
-	parseFile(t,
-		`unit U.V.W;
-	interface
-	implementation
-	end.`,
+	parseFile(t, `
+  unit U.V.W;
+  interface
+  implementation
+  end.`,
 		&pas.File{
 			Kind: pas.Unit,
 			Name: "U.V.W",
@@ -47,8 +47,7 @@ func TestParseUses(t *testing.T) {
   uses CustomUnit, System.Math, Vcl.Graphics.Splines;
   implementation
   uses Windows . WinAPI;
-  end.
-`,
+  end.`,
 		&pas.File{
 			Kind: pas.Unit,
 			Name: "U",
@@ -383,6 +382,59 @@ func TestClassVisibilities(t *testing.T) {
 								},
 							},
 						},
+					},
+				},
+				{Kind: pas.ImplementationSection},
+			},
+		},
+	)
+}
+
+func TestParseVarBlock(t *testing.T) {
+	parseFile(t, `
+  unit U;
+  interface
+  VAR
+    I: Integer;
+    S: string;
+  implementation
+  end.`,
+		&pas.File{
+			Kind: pas.Unit,
+			Name: "U",
+			Sections: []pas.FileSection{
+				{
+					Kind: pas.InterfaceSection,
+					Blocks: []pas.FileSectionBlock{
+						pas.VarBlock{
+							{Name: "I", Type: "Integer"},
+							{Name: "S", Type: "string"},
+						},
+					},
+				},
+				{Kind: pas.ImplementationSection},
+			},
+		},
+	)
+}
+
+func TestParseTwoVarBlocks(t *testing.T) {
+	parseFile(t, `
+  unit U;
+  interface
+  var I: Integer;
+  var S: string;
+  implementation
+  end.`,
+		&pas.File{
+			Kind: pas.Unit,
+			Name: "U",
+			Sections: []pas.FileSection{
+				{
+					Kind: pas.InterfaceSection,
+					Blocks: []pas.FileSectionBlock{
+						pas.VarBlock{{Name: "I", Type: "Integer"}},
+						pas.VarBlock{{Name: "S", Type: "string"}},
 					},
 				},
 				{Kind: pas.ImplementationSection},
