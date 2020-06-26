@@ -39,11 +39,25 @@ func (p *parser) parseFile() (*File, error) {
 }
 
 func (p *parser) parseFileSection(kind FileSectionKind) {
+	uses := p.parseUses()
+	blocks := p.parseSectionBlocks()
 	p.file.Sections = append(p.file.Sections, FileSection{
 		Kind:   kind,
-		Uses:   p.parseOptionalUses(),
-		Blocks: p.parseSectionBlocks(),
+		Uses:   uses,
+		Blocks: blocks,
 	})
+}
+
+func (p *parser) parseUses() []string {
+	var uses []string
+	if p.seesWordAndEat("uses") {
+		uses = append(uses, p.qualifiedIdentifier("uses clause"))
+		for p.seesAndEat(',') {
+			uses = append(uses, p.qualifiedIdentifier("uses clause"))
+		}
+		p.eat(';')
+	}
+	return uses
 }
 
 func (p *parser) parseSectionBlocks() []FileSectionBlock {
@@ -66,14 +80,12 @@ func (p *parser) parseTypeBlock() FileSectionBlock {
 	class.Name = p.identifier("type name")
 	p.eat('=')
 	p.eatWord("class")
-	if p.sees('(') {
-		p.eat('(')
+	if p.seesAndEat('(') {
 		class.SuperClasses = append(
 			class.SuperClasses,
 			p.qualifiedIdentifier("parent class name"),
 		)
-		for p.sees(',') {
-			p.eat(',')
+		for p.seesAndEat(',') {
 			class.SuperClasses = append(
 				class.SuperClasses,
 				p.qualifiedIdentifier("parent interface name"),
@@ -113,8 +125,7 @@ func (p *parser) parseVarBlock() FileSectionBlock {
 func (p *parser) parseFunctionDeclaration() ClassMember {
 	var f Function
 	f.Name = p.identifier("function name")
-	if p.sees('(') {
-		p.eat('(')
+	if p.seesAndEat('(') {
 		for p.sees(tokenWord) || p.sees('[') {
 			var param Parameter
 
@@ -122,16 +133,14 @@ func (p *parser) parseFunctionDeclaration() ClassMember {
 				param.Qualifier = Var
 			} else if p.seesWordAndEat("const") {
 				param.Qualifier = Const
-				if p.sees('[') {
-					p.eat('[')
+				if p.seesAndEat('[') {
 					p.eatWord("ref")
 					p.eat(']')
 					param.Qualifier = ConstRef
 				}
 			} else if p.seesWordAndEat("out") {
 				param.Qualifier = Out
-			} else if p.sees('[') {
-				p.eat('[')
+			} else if p.seesAndEat('[') {
 				p.eatWord("ref")
 				p.eat(']')
 				p.eatWord("const")
@@ -139,25 +148,20 @@ func (p *parser) parseFunctionDeclaration() ClassMember {
 			}
 
 			param.Names = append(param.Names, p.identifier("parameter name"))
-			for p.sees(',') {
-				p.eat(',')
+			for p.seesAndEat(',') {
 				param.Names = append(param.Names, p.identifier("parameter name"))
 			}
-			if p.sees(':') {
-				p.eat(':')
+			if p.seesAndEat(':') {
 				param.Type = p.qualifiedIdentifier("parameter type")
 			}
 			f.Parameters = append(f.Parameters, param)
-			if p.sees(';') {
-				p.eat(';')
-			} else {
-				break
+			if !p.seesAndEat(';') {
+				break // The last parameter is not followed by a ';'.
 			}
 		}
 		p.eat(')')
 	}
-	if p.sees(':') {
-		p.eat(':')
+	if p.seesAndEat(':') {
 		f.Returns = p.qualifiedIdentifier("return type")
 	}
 	p.eat(';')
@@ -171,19 +175,6 @@ func (p *parser) parseVariableDeclaration() Variable {
 	v.Type = p.qualifiedIdentifier("type name")
 	p.eat(';')
 	return v
-}
-
-func (p *parser) parseOptionalUses() []string {
-	var uses []string
-	if p.seesWordAndEat("uses") {
-		uses = append(uses, p.qualifiedIdentifier("uses clause"))
-		for p.sees(',') {
-			p.eat(',')
-			uses = append(uses, p.qualifiedIdentifier("uses clause"))
-		}
-		p.eat(';')
-	}
-	return uses
 }
 
 func (p *parser) nextToken() token {
@@ -215,6 +206,18 @@ func (p *parser) sees(typ tokenType) bool {
 	}
 	t := p.peekToken()
 	return t.tokenType == typ
+}
+
+func (p *parser) seesAndEat(typ tokenType) bool {
+	if p.err != nil {
+		return false
+	}
+	t := p.peekToken()
+	if t.tokenType == typ {
+		p.nextToken()
+		return true
+	}
+	return false
 }
 
 func (p *parser) seesWord(text string) bool {
@@ -277,8 +280,7 @@ func (p *parser) eatWord(text string) {
 // There might be comments or white space between the identifiers and dots.
 func (p *parser) qualifiedIdentifier(description string) string {
 	s := p.identifier(description)
-	for p.sees('.') {
-		p.eat('.')
+	for p.seesAndEat('.') {
 		s += "." + p.identifier(description)
 	}
 	return s
