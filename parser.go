@@ -186,7 +186,7 @@ func (p *parser) nextToken() token {
 
 	// Find the next token which is not a white-space.
 	t := p.tokens.next()
-	for t.tokenType == tokenWhiteSpace {
+	for t.tokenType == tokenWhiteSpace || t.tokenType == tokenComment {
 		t = p.tokens.next()
 	}
 	return t

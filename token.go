@@ -1,6 +1,9 @@
 package pas
 
-import "fmt"
+import (
+	"fmt"
+	"unicode/utf8"
+)
 
 type token struct {
 	tokenType tokenType
@@ -18,9 +21,18 @@ const (
 	tokenEOF        tokenType = 0
 	tokenWord       tokenType = 256
 	tokenWhiteSpace tokenType = 257
+	tokenComment    tokenType = 258
 )
 
 func (t token) String() string {
+	if t.tokenType == tokenComment {
+		text := t.text
+		const max = 20
+		if utf8.RuneCountInString(text) > max {
+			text = string([]rune(text)[:max]) + "..."
+		}
+		return fmt.Sprintf("%v %q at %d:%d", t.tokenType, text, t.line, t.col)
+	}
 	if string(t.tokenType) == t.text || t.text == "" {
 		return fmt.Sprintf("%v at %d:%d", t.tokenType, t.line, t.col)
 	}
@@ -37,6 +49,8 @@ func (t tokenType) String() string {
 		return "word"
 	case tokenWhiteSpace:
 		return "white space"
+	case tokenComment:
+		return "comment"
 	default:
 		if 0 <= t && t <= 127 {
 			return fmt.Sprintf("token %q", string(t))

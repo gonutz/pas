@@ -37,6 +37,26 @@ func (t *tokenizer) next() token {
 	case ';', ':', '.', ',', '=', '(', ')', '[', ']':
 		t.nextRune()
 		haveType = tokenType(r)
+	case '{':
+		for {
+			r := t.nextRune()
+			if r == '}' || r == 0 {
+				break
+			}
+		}
+		t.nextRune()
+		haveType = tokenComment
+	case '/':
+		if t.nextRune() == '/' {
+			for {
+				r := t.nextRune()
+				if r == '\n' || r == 0 {
+					break
+				}
+			}
+			t.nextRune()
+			haveType = tokenComment
+		}
 	default:
 		if unicode.IsSpace(r) {
 			for unicode.IsSpace(t.nextRune()) {

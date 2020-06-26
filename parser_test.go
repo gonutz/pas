@@ -443,6 +443,26 @@ func TestParseTwoVarBlocks(t *testing.T) {
 	)
 }
 
+func TestComments(t *testing.T) {
+	// TODO For now we skip comments and throw them away. Figure out a way to
+	// include them in the tree, maybe as a parallel structure with references
+	// to the tree.
+	parseFile(t, `
+  unit U;
+  interface
+  implementation
+  {$R *.dfm}
+  end.`,
+		&pas.File{
+			Kind: pas.Unit,
+			Name: "U",
+			Sections: []pas.FileSection{
+				{Kind: pas.InterfaceSection},
+				{Kind: pas.ImplementationSection},
+			},
+		})
+}
+
 func parseFile(t *testing.T, code string, want *pas.File) {
 	t.Helper()
 	code = strings.Replace(code, "\n", "\r\n", -1)
