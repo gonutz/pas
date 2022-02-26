@@ -210,17 +210,21 @@ func (p *parser) parseTypeBlock() (ast.TypeBlock, error) {
 		}
 
 		for !p.seesWord("end") {
+			processed := false
 			for _, proc := range procs {
 				if p.seesWord(proc.name) {
 					if err := proc.fn(proc.name); err != nil {
 						return nil, err
 					}
+					processed = true
 					break
 				}
 			}
+			if !processed {
 			if err := appendVar(); err != nil {
 				return nil, err
 			}
+		}
 		}
 		if err := p.eatWord("end"); err != nil {
 			return nil, err
