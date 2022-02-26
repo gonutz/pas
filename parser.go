@@ -89,7 +89,9 @@ func (p *parser) parseUses() ([]string, error) {
 			}
 			uses = append(uses, unitName)
 		}
-		p.eat(';')
+		if err := p.eat(';'); err != nil {
+			return nil, err
+		}
 	}
 	return uses, nil
 }
@@ -118,16 +120,22 @@ func (p *parser) parseSectionBlocks() ([]FileSectionBlock, error) {
 
 // TODO change to return *TypeBlock
 func (p *parser) parseTypeBlock() (FileSectionBlock, error) {
-	p.eatWord("type")
+	if err := p.eatWord("type"); err != nil {
+		return nil, err
+	}
 	identifier, err := p.identifier("type name")
 	if err != nil {
 		return nil, err
 	}
-	p.eat('=')
+	if err := p.eat('='); err != nil {
+		return nil, err
+	}
 	if p.seesWord("class") {
 		var class Class
 		class.Name = identifier
-		p.eatWord("class")
+		if err := p.eatWord("class"); err != nil {
+			return nil, err
+		}
 		if p.seesAndEat('(') {
 			className, err := p.qualifiedIdentifier("parent class name")
 			if err != nil {
@@ -141,7 +149,9 @@ func (p *parser) parseTypeBlock() (FileSectionBlock, error) {
 				}
 				class.SuperClasses = append(class.SuperClasses, intf)
 			}
-			p.eat(')')
+			if err := p.eat(')'); err != nil {
+				return nil, err
+			}
 		}
 		for !p.seesWord("end") {
 			if p.seesWordAndEat("published") {
@@ -166,13 +176,19 @@ func (p *parser) parseTypeBlock() (FileSectionBlock, error) {
 				class.appendMemberToCurrentSection(v)
 			}
 		}
-		p.eatWord("end")
-		p.eat(';')
+		if err := p.eatWord("end"); err != nil {
+			return nil, err
+		}
+		if err := p.eat(';'); err != nil {
+			return nil, err
+		}
 		return TypeBlock{class}, nil
 	} else {
 		var record Record
 		record.Name = identifier
-		p.eatWord("record")
+		if err := p.eatWord("record"); err != nil {
+			return nil, err
+		}
 		for !p.seesWord("end") {
 			if p.seesWordAndEat("procedure") || p.seesWordAndEat("function") {
 				f, err := p.parseFunctionDeclaration()
@@ -188,15 +204,21 @@ func (p *parser) parseTypeBlock() (FileSectionBlock, error) {
 				record.appendMember(v)
 			}
 		}
-		p.eatWord("end")
-		p.eat(';')
+		if err := p.eatWord("end"); err != nil {
+			return nil, err
+		}
+		if err := p.eat(';'); err != nil {
+			return nil, err
+		}
 		return TypeBlock{record}, nil
 	}
 }
 
 // TODO change to return *VarBlock
 func (p *parser) parseVarBlock() (FileSectionBlock, error) {
-	p.eatWord("var")
+	if err := p.eatWord("var"); err != nil {
+		return nil, err
+	}
 	var vars VarBlock
 	for p.sees(tokenWord) && !p.seesKeyword() {
 		varDec, err := p.parseVariableDeclaration()
@@ -225,35 +247,45 @@ func (p *parser) parseFunctionDeclaration() (ClassMember, error) {
 			} else if p.seesWordAndEat("const") {
 				param.Qualifier = Const
 				if p.seesAndEat('[') {
-					p.eatWord("ref")
-					p.eat(']')
+					if err := p.eatWord("ref"); err != nil {
+						return nil, err
+					}
+					if err := p.eat(']'); err != nil {
+						return nil, err
+					}
 					param.Qualifier = ConstRef
 				}
 			} else if p.seesWordAndEat("out") {
 				param.Qualifier = Out
 			} else if p.seesAndEat('[') {
-				p.eatWord("ref")
-				p.eat(']')
-				p.eatWord("const")
+				if err := p.eatWord("ref"); err != nil {
+					return nil, err
+				}
+				if err := p.eat(']'); err != nil {
+					return nil, err
+				}
+				if err := p.eatWord("const"); err != nil {
+					return nil, err
+				}
 				param.Qualifier = RefConst
 			}
 
 			firstId, err := p.identifier("parameter name")
 			if err != nil {
-				return f, err
+				return nil, err
 			}
 			param.Names = append(param.Names, firstId)
 			for p.seesAndEat(',') {
 				id, err := p.identifier("parameter name")
 				if err != nil {
-					return f, err
+					return nil, err
 				}
 				param.Names = append(param.Names, id)
 			}
 			if p.seesAndEat(':') {
 				pt, err := p.qualifiedIdentifier("parameter type")
 				if err != nil {
-					return f, err
+					return nil, err
 				}
 				param.Type = pt
 			}
@@ -262,16 +294,20 @@ func (p *parser) parseFunctionDeclaration() (ClassMember, error) {
 				break // The last parameter is not followed by a ';'.
 			}
 		}
-		p.eat(')')
+		if err := p.eat(')'); err != nil {
+			return nil, err
+		}
 	}
 	if p.seesAndEat(':') {
 		rt, err := p.qualifiedIdentifier("return type")
 		if err != nil {
-			return f, err
+			return nil, err
 		}
 		f.Returns = rt
 	}
-	p.eat(';')
+	if err := p.eat(';'); err != nil {
+		return nil, err
+	}
 	return f, nil
 }
 
@@ -283,12 +319,16 @@ func (p *parser) parseVariableDeclaration() (Variable, error) {
 	if err != nil {
 		return v, err
 	}
-	p.eat(':')
+	if err := p.eat(':'); err != nil {
+		return v, err
+	}
 	v.Type, err = p.qualifiedIdentifier("type name")
 	if err != nil {
 		return v, err
 	}
-	p.eat(';')
+	if err := p.eat(';'); err != nil {
+		return v, err
+	}
 	return v, nil
 }
 
