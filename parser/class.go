@@ -63,15 +63,15 @@ func classProcessor(class *ast.Class) func(p *parser) error {
 			return err
 		}
 		if p.sees('(') {
-			if err := p.eat('('); err != nil {
-				return err
-			}
-			superClassNames, err := p.parseSeparatedString(',', "parent class name", "parent interface name")
+			err := p.startEndToken('(', ')', func() error {
+				superClassNames, err := p.parseSeparatedString(',', "parent class name", "parent interface name")
+				if err != nil {
+					return err
+				}
+				class.SuperClasses = superClassNames
+				return nil
+			})
 			if err != nil {
-				return err
-			}
-			class.SuperClasses = superClassNames
-			if err := p.eat(')'); err != nil {
 				return err
 			}
 		}
