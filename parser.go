@@ -66,7 +66,7 @@ func (p *parser) parseFileSection(kind FileSectionKind) error {
 	if err != nil {
 		return err
 	}
-	p.file.Sections = append(p.file.Sections, FileSection{
+	p.file.Sections = append(p.file.Sections, &FileSection{
 		Kind:   kind,
 		Uses:   uses,
 		Blocks: blocks,
@@ -124,8 +124,7 @@ func (p *parser) parseSectionBlocks() ([]FileSectionBlock, error) {
 	return blocks, nil
 }
 
-// TODO change to return *TypeBlock
-func (p *parser) parseTypeBlock() (FileSectionBlock, error) {
+func (p *parser) parseTypeBlock() (TypeBlock, error) {
 	if err := p.eatWord("type"); err != nil {
 		return nil, err
 	}
@@ -137,8 +136,7 @@ func (p *parser) parseTypeBlock() (FileSectionBlock, error) {
 		return nil, err
 	}
 	if p.seesWord("class") {
-		var class Class
-		class.Name = identifier
+		class := &Class{Name: identifier}
 		if err := p.eatWord("class"); err != nil {
 			return nil, err
 		}
@@ -228,8 +226,7 @@ func (p *parser) parseTypeBlock() (FileSectionBlock, error) {
 		}
 		return TypeBlock{class}, nil
 	} else {
-		var record Record
-		record.Name = identifier
+		record := &Record{Name: identifier}
 		if err := p.eatWord("record"); err != nil {
 			return nil, err
 		}
@@ -270,8 +267,7 @@ func (p *parser) parseTypeBlock() (FileSectionBlock, error) {
 	}
 }
 
-// TODO change to return *VarBlock
-func (p *parser) parseVarBlock() (FileSectionBlock, error) {
+func (p *parser) parseVarBlock() (VarBlock, error) {
 	if err := p.eatWord("var"); err != nil {
 		return nil, err
 	}
@@ -286,20 +282,18 @@ func (p *parser) parseVarBlock() (FileSectionBlock, error) {
 	return vars, nil
 }
 
-// TODO change to return *Function
-func (p *parser) parseFunctionDeclaration() (ClassMember, error) {
-	var f Function
-	var err error
-	f.Name, err = p.identifier("function name")
+func (p *parser) parseFunctionDeclaration() (res *Function, rerr error) {
+	name, err := p.identifier("function name")
 	if err != nil {
 		return nil, err
 	}
+	f := &Function{Name: name}
 	if p.sees('(') {
 		if err := p.eat('('); err != nil {
 			return nil, err
 		}
 		for p.sees(tokenWord) || p.sees('[') {
-			var param Parameter
+			param := &Parameter{}
 
 			if p.seesWord("var") {
 				if err := p.eatWord("var"); err != nil {
@@ -397,25 +391,22 @@ func (p *parser) parseFunctionDeclaration() (ClassMember, error) {
 	return f, nil
 }
 
-// TODO change to return *Variable
-func (p *parser) parseVariableDeclaration() (Variable, error) {
-	var v Variable
-	var err error
-	v.Name, err = p.identifier("field name")
+func (p *parser) parseVariableDeclaration() (*Variable, error) {
+	name, err := p.identifier("field name")
 	if err != nil {
-		return v, err
+		return nil, err
 	}
 	if err := p.eat(':'); err != nil {
-		return v, err
+		return nil, err
 	}
-	v.Type, err = p.qualifiedIdentifier("type name")
+	typ, err := p.qualifiedIdentifier("type name")
 	if err != nil {
-		return v, err
+		return nil, err
 	}
 	if err := p.eat(';'); err != nil {
-		return v, err
+		return nil, err
 	}
-	return v, nil
+	return &Variable{Name: name, Type: typ}, nil
 }
 
 func (p *parser) nextToken() token {

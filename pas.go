@@ -7,7 +7,7 @@ func ParseString(code string) (*File, error) {
 type File struct {
 	Kind     FileKind
 	Name     string
-	Sections []FileSection
+	Sections []*FileSection
 }
 
 type FileKind int
@@ -69,13 +69,13 @@ func (VarBlock) isFileSectionBlock()  {}
 
 type TypeBlock []TypeDeclaration
 
-type VarBlock []Variable
+type VarBlock []*Variable
 
 type TypeDeclaration interface {
 	isTypeDeclaration()
 }
 
-func (Class) isTypeDeclaration() {}
+func (*Class) isTypeDeclaration() {}
 
 type Class struct {
 	Name         string
@@ -116,8 +116,8 @@ type ClassMember interface {
 	isClassMember()
 }
 
-func (Variable) isClassMember() {}
-func (Function) isClassMember() {}
+func (*Variable) isClassMember() {}
+func (*Function) isClassMember() {}
 
 type Variable struct {
 	Name string
@@ -126,7 +126,7 @@ type Variable struct {
 
 type Function struct {
 	Name       string
-	Parameters []Parameter
+	Parameters []*Parameter
 	// Returns is either the return type for functions or the empty string for
 	// procedures.
 	Returns string
@@ -141,7 +141,7 @@ type Parameter struct {
 	Qualifier Qualifier
 }
 
-func (Record) isTypeDeclaration() {}
+func (*Record) isTypeDeclaration() {}
 
 type Record struct {
 	Name string
