@@ -144,26 +144,33 @@ func (p *parser) parseTypeBlock() (ast.TypeBlock, error) {
 	if err := p.eatWord("type"); err != nil {
 		return nil, err
 	}
-	identifier, err := p.identifier("type name")
-	if err != nil {
-		return nil, err
-	}
-	if err := p.eat('='); err != nil {
-		return nil, err
-	}
-	if p.seesWord("class") {
-		class := &ast.Class{Name: identifier}
-		if err := classProcessor(class)(p); err != nil {
+	res := ast.TypeBlock{}
+	for {
+		identifier, err := p.identifier("type name")
+		if err != nil {
 			return nil, err
 		}
-		return ast.TypeBlock{class}, nil
-	} else {
-		record := &ast.Record{Name: identifier}
-		if err := recordProcessor(record)(p); err != nil {
+		if err := p.eat('='); err != nil {
 			return nil, err
 		}
-		return ast.TypeBlock{record}, nil
+		if p.seesWord("class") {
+			class := &ast.Class{Name: identifier}
+			if err := classProcessor(class)(p); err != nil {
+				return nil, err
+			}
+			res = append(res, class)
+		} else {
+			record := &ast.Record{Name: identifier}
+			if err := recordProcessor(record)(p); err != nil {
+				return nil, err
+			}
+			res = append(res, record)
+		}
+		if p.seesWords("var", "type", "const", "implementation") {
+			break
+		}
 	}
+	return res, nil
 }
 
 func (p *parser) parseVarBlock() (ast.VarBlock, error) {
@@ -343,6 +350,15 @@ func (p *parser) sees(typ tokenType) bool {
 func (p *parser) seesWord(text string) bool {
 	t := p.peekToken()
 	return t.tokenType == tokenWord && strings.ToLower(t.text) == text
+}
+
+func (p *parser) seesWords(texts ...string) bool {
+	for _, t := range texts {
+		if p.seesWord(t) {
+			return true
+		}
+	}
+	return false
 }
 
 func (p *parser) seesKeyword() bool {
