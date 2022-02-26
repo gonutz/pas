@@ -138,141 +138,157 @@ func (p *parser) parseTypeBlock() (ast.TypeBlock, error) {
 		return nil, err
 	}
 	if p.seesWord("class") {
-		class := &ast.Class{Name: identifier}
-		if err := p.eatWord("class"); err != nil {
-			return nil, err
-		}
-		if p.sees('(') {
-			if err := p.eat('('); err != nil {
-				return nil, err
-			}
-			className, err := p.qualifiedIdentifier("parent class name")
-			if err != nil {
-				return nil, err
-			}
-			class.SuperClasses = append(class.SuperClasses, className)
-			for p.sees(',') {
-				if err := p.eat(','); err != nil {
-					return nil, err
-				}
-				intf, err := p.qualifiedIdentifier("parent interface name")
-				if err != nil {
-					return nil, err
-				}
-				class.SuperClasses = append(class.SuperClasses, intf)
-			}
-			if err := p.eat(')'); err != nil {
-				return nil, err
-			}
-		}
-
-		type classMemberProc struct {
-			name string
-			fn   func(string) error
-		}
-
-		newSection := func(visibility ast.Visibility) func(name string) error {
-			return func(name string) error {
-				if err := p.eatWord(name); err != nil {
-					return err
-				}
-				class.NewSection(visibility)
-				return nil
-			}
-		}
-		appendFunc := func(name string) error {
-			if err := p.eatWord(name); err != nil {
-				return err
-			}
-			f, err := p.parseFunctionDeclaration()
-			if err != nil {
-				return err
-			}
-			class.AppendMemberToCurrentSection(f)
-			return nil
-		}
-		appendVar := func() error {
-			v, err := p.parseVariableDeclaration()
-			if err != nil {
-				return err
-			}
-			class.AppendMemberToCurrentSection(v)
-			return nil
-		}
-
-		procs := []*classMemberProc{
-			{"published", newSection(ast.Published)},
-			{"public", newSection(ast.Public)},
-			{"protected", newSection(ast.Protected)},
-			{"private", newSection(ast.Private)},
-			{"procedure", appendFunc},
-			{"function", appendFunc},
-		}
-
-		for !p.seesWord("end") {
-			processed := false
-			for _, proc := range procs {
-				if p.seesWord(proc.name) {
-					if err := proc.fn(proc.name); err != nil {
-						return nil, err
-					}
-					processed = true
-					break
-				}
-			}
-			if !processed {
-				if err := appendVar(); err != nil {
-					return nil, err
-				}
-			}
-		}
-		if err := p.eatWord("end"); err != nil {
-			return nil, err
-		}
-		if err := p.eat(';'); err != nil {
+		class, err := p.parseClass(identifier)
+		if err != nil {
 			return nil, err
 		}
 		return ast.TypeBlock{class}, nil
 	} else {
-		record := &ast.Record{Name: identifier}
-		if err := p.eatWord("record"); err != nil {
-			return nil, err
-		}
-		for !p.seesWord("end") {
-			if p.seesWord("procedure") {
-				if err := p.eatWord("procedure"); err != nil {
-					return nil, err
-				}
-				f, err := p.parseFunctionDeclaration()
-				if err != nil {
-					return nil, err
-				}
-				record.AppendMember(f)
-			} else if p.seesWord("function") {
-				if err := p.eatWord("function"); err != nil {
-					return nil, err
-				}
-				f, err := p.parseFunctionDeclaration()
-				if err != nil {
-					return nil, err
-				}
-				record.AppendMember(f)
-			} else {
-				v, err := p.parseVariableDeclaration()
-				if err != nil {
-					return nil, err
-				}
-				record.AppendMember(v)
-			}
-		}
-		if err := p.eatWord("end"); err != nil {
-			return nil, err
-		}
-		if err := p.eat(';'); err != nil {
+		record, err := p.parseRecord(identifier)
+		if err != nil {
 			return nil, err
 		}
 		return ast.TypeBlock{record}, nil
 	}
+}
+
+func (p *parser) parseClass(identifier string) (*ast.Class, error) {
+	class := &ast.Class{Name: identifier}
+	if err := p.eatWord("class"); err != nil {
+		return nil, err
+	}
+	if p.sees('(') {
+		if err := p.eat('('); err != nil {
+			return nil, err
+		}
+		className, err := p.qualifiedIdentifier("parent class name")
+		if err != nil {
+			return nil, err
+		}
+		class.SuperClasses = append(class.SuperClasses, className)
+		for p.sees(',') {
+			if err := p.eat(','); err != nil {
+				return nil, err
+			}
+			intf, err := p.qualifiedIdentifier("parent interface name")
+			if err != nil {
+				return nil, err
+			}
+			class.SuperClasses = append(class.SuperClasses, intf)
+		}
+		if err := p.eat(')'); err != nil {
+			return nil, err
+		}
+	}
+
+	type classMemberProc struct {
+		name string
+		fn   func(string) error
+	}
+
+	newSection := func(visibility ast.Visibility) func(name string) error {
+		return func(name string) error {
+			if err := p.eatWord(name); err != nil {
+				return err
+			}
+			class.NewSection(visibility)
+			return nil
+		}
+	}
+	appendFunc := func(name string) error {
+		if err := p.eatWord(name); err != nil {
+			return err
+		}
+		f, err := p.parseFunctionDeclaration()
+		if err != nil {
+			return err
+		}
+		class.AppendMemberToCurrentSection(f)
+		return nil
+	}
+	appendVar := func() error {
+		v, err := p.parseVariableDeclaration()
+		if err != nil {
+			return err
+		}
+		class.AppendMemberToCurrentSection(v)
+		return nil
+	}
+
+	procs := []*classMemberProc{
+		{"published", newSection(ast.Published)},
+		{"public", newSection(ast.Public)},
+		{"protected", newSection(ast.Protected)},
+		{"private", newSection(ast.Private)},
+		{"procedure", appendFunc},
+		{"function", appendFunc},
+	}
+
+	for !p.seesWord("end") {
+		processed := false
+		for _, proc := range procs {
+			if p.seesWord(proc.name) {
+				if err := proc.fn(proc.name); err != nil {
+					return nil, err
+				}
+				processed = true
+				break
+			}
+		}
+		if !processed {
+			if err := appendVar(); err != nil {
+				return nil, err
+			}
+		}
+	}
+	if err := p.eatWord("end"); err != nil {
+		return nil, err
+	}
+	if err := p.eat(';'); err != nil {
+		return nil, err
+	}
+	return class, nil
+}
+
+func (p *parser) parseRecord(identifier string) (*ast.Record, error) {
+	record := &ast.Record{Name: identifier}
+	if err := p.eatWord("record"); err != nil {
+		return nil, err
+	}
+	for !p.seesWord("end") {
+		if p.seesWord("procedure") {
+			if err := p.eatWord("procedure"); err != nil {
+				return nil, err
+			}
+			f, err := p.parseFunctionDeclaration()
+			if err != nil {
+				return nil, err
+			}
+			record.AppendMember(f)
+		} else if p.seesWord("function") {
+			if err := p.eatWord("function"); err != nil {
+				return nil, err
+			}
+			f, err := p.parseFunctionDeclaration()
+			if err != nil {
+				return nil, err
+			}
+			record.AppendMember(f)
+		} else {
+			v, err := p.parseVariableDeclaration()
+			if err != nil {
+				return nil, err
+			}
+			record.AppendMember(v)
+		}
+	}
+	if err := p.eatWord("end"); err != nil {
+		return nil, err
+	}
+	if err := p.eat(';'); err != nil {
+		return nil, err
+	}
+	return record, nil
 }
 
 func (p *parser) parseVarBlock() (ast.VarBlock, error) {
