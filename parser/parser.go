@@ -152,34 +152,18 @@ func (p *parser) parseTypeBlock() (ast.TypeBlock, error) {
 		return nil, err
 	}
 	if p.seesWord("class") {
-		class, err := p.parseClass(identifier)
-		if err != nil {
+		class := &ast.Class{Name: identifier}
+		if err := classProcessor(class)(p); err != nil {
 			return nil, err
 		}
 		return ast.TypeBlock{class}, nil
 	} else {
-		record, err := p.parseRecord(identifier)
-		if err != nil {
+		record := &ast.Record{Name: identifier}
+		if err := recordProcessor(record)(p); err != nil {
 			return nil, err
 		}
 		return ast.TypeBlock{record}, nil
 	}
-}
-
-func (p *parser) parseClass(identifier string) (*ast.Class, error) {
-	class := &ast.Class{Name: identifier}
-	if err := classProcessor(class)(p); err != nil {
-		return nil, err
-	}
-	return class, nil
-}
-
-func (p *parser) parseRecord(identifier string) (*ast.Record, error) {
-	record := &ast.Record{Name: identifier}
-	if err := recordProcessor(record)(p); err != nil {
-		return nil, err
-	}
-	return record, nil
 }
 
 func (p *parser) parseVarBlock() (ast.VarBlock, error) {
