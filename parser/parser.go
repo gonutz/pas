@@ -159,12 +159,20 @@ func (p *parser) parseTypeBlock() (ast.TypeBlock, error) {
 				return nil, err
 			}
 			res = append(res, class)
-		} else {
+		} else if p.seesWord("record") {
 			record := &ast.Record{Name: identifier}
 			if err := recordProcessor(record)(p); err != nil {
 				return nil, err
 			}
 			res = append(res, record)
+		} else if p.seesWords("packed", "array") {
+			array := &ast.Array{Name: identifier}
+			if err := arrayProcessor(array)(p); err != nil {
+				return nil, err
+			}
+			res = append(res, array)
+		} else {
+			return nil, errors.Errorf("expected type declaration, got %+v", p.peekToken())
 		}
 		if p.seesWords("var", "type", "const", "implementation") {
 			break
@@ -375,6 +383,15 @@ func (p *parser) eat(typ tokenType) error {
 	t := p.nextToken()
 	if t.tokenType != typ {
 		return p.tokenError(t, typ.String())
+	}
+	return nil
+}
+
+func (p *parser) eats(types ...tokenType) error {
+	for _, typ := range types {
+		if err := p.eat(typ); err != nil {
+			return err
+		}
 	}
 	return nil
 }

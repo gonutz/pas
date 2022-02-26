@@ -102,7 +102,7 @@ func TestIncompleteTypeBlock(t *testing.T) {
 	)
 	parseError(t,
 		"unit U;interface type C=A,B) end; implementation end.",
-		`keyword "record" expected but was word "A" at 1:25`,
+		`expected type declaration, got word "A" at 1:25`,
 	)
 	parseError(t,
 		"unit U;interface type C class(A,B) end; implementation end.",
