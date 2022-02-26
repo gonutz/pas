@@ -469,7 +469,7 @@ func parseFile(t *testing.T, code string, want *ast.File) {
 	code = strings.Replace(code, "\n", "\r\n", -1)
 	f, err := pas.ParseString(code)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("%+v\n", err)
 	}
 	assert.Equal(t, want, f)
 }
