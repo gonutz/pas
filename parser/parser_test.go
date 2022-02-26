@@ -197,7 +197,7 @@ func TestParseClassFunctions(t *testing.T) {
 										&ast.Method{Function: ast.Function{Name: "A"}},
 										&ast.Method{Function: ast.Function{Name: "B"}},
 										&ast.Method{Function: ast.Function{Name: "C",
-											Parameters: []*ast.Parameter{
+											Parameters: ast.Parameters{
 												{
 													Names: []string{"D"},
 													Type:  "Integer",
@@ -205,7 +205,7 @@ func TestParseClassFunctions(t *testing.T) {
 											},
 										}},
 										&ast.Method{Function: ast.Function{Name: "E",
-											Parameters: []*ast.Parameter{
+											Parameters: ast.Parameters{
 												{
 													Names: []string{"F", "G"},
 													Type:  "Integer",
@@ -213,7 +213,7 @@ func TestParseClassFunctions(t *testing.T) {
 											},
 										}},
 										&ast.Method{Function: ast.Function{Name: "H",
-											Parameters: []*ast.Parameter{
+											Parameters: ast.Parameters{
 												{
 													Names: []string{"I"},
 													Type:  "Integer",
@@ -227,7 +227,7 @@ func TestParseClassFunctions(t *testing.T) {
 										&ast.Method{Function: ast.Function{Name: "A", Returns: "Integer"}},
 										&ast.Method{Function: ast.Function{Name: "B", Returns: "string"}},
 										&ast.Method{Function: ast.Function{Name: "C", Returns: "Pointer",
-											Parameters: []*ast.Parameter{
+											Parameters: ast.Parameters{
 												{
 													Names: []string{"D"},
 													Type:  "Integer",
@@ -235,7 +235,7 @@ func TestParseClassFunctions(t *testing.T) {
 											},
 										}},
 										&ast.Method{Function: ast.Function{Name: "E", Returns: "Cardinal",
-											Parameters: []*ast.Parameter{
+											Parameters: ast.Parameters{
 												{
 													Names: []string{"F", "G"},
 													Type:  "Integer",
@@ -243,7 +243,7 @@ func TestParseClassFunctions(t *testing.T) {
 											},
 										}},
 										&ast.Method{Function: ast.Function{Name: "H", Returns: "Vcl.TForm",
-											Parameters: []*ast.Parameter{
+											Parameters: ast.Parameters{
 												{
 													Names: []string{"I"},
 													Type:  "Integer",
@@ -255,7 +255,7 @@ func TestParseClassFunctions(t *testing.T) {
 											},
 										}},
 										&ast.Method{Function: ast.Function{Name: "P",
-											Parameters: []*ast.Parameter{
+											Parameters: ast.Parameters{
 												{
 													Names:     []string{"I"},
 													Type:      "Integer",
@@ -264,7 +264,7 @@ func TestParseClassFunctions(t *testing.T) {
 											},
 										}},
 										&ast.Method{Function: ast.Function{Name: "P",
-											Parameters: []*ast.Parameter{
+											Parameters: ast.Parameters{
 												{
 													Names:     []string{"I"},
 													Type:      "Integer",
@@ -273,7 +273,7 @@ func TestParseClassFunctions(t *testing.T) {
 											},
 										}},
 										&ast.Method{Function: ast.Function{Name: "P",
-											Parameters: []*ast.Parameter{
+											Parameters: ast.Parameters{
 												{
 													Names:     []string{"I"},
 													Type:      "Integer",
@@ -282,7 +282,7 @@ func TestParseClassFunctions(t *testing.T) {
 											},
 										}},
 										&ast.Method{Function: ast.Function{Name: "P",
-											Parameters: []*ast.Parameter{
+											Parameters: ast.Parameters{
 												{
 													Names:     []string{"I"},
 													Type:      "Integer",
@@ -291,7 +291,7 @@ func TestParseClassFunctions(t *testing.T) {
 											},
 										}},
 										&ast.Method{Function: ast.Function{Name: "P",
-											Parameters: []*ast.Parameter{
+											Parameters: ast.Parameters{
 												{
 													Names:     []string{"I"},
 													Type:      "Integer",
@@ -300,7 +300,7 @@ func TestParseClassFunctions(t *testing.T) {
 											},
 										}},
 										&ast.Method{Function: ast.Function{Name: "NoType",
-											Parameters: []*ast.Parameter{
+											Parameters: ast.Parameters{
 												{
 													Names:     []string{"P"},
 													Type:      "",

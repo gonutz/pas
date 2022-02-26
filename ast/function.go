@@ -2,11 +2,13 @@ package ast
 
 type Function struct {
 	Name       string
-	Parameters []*Parameter
+	Parameters Parameters
 	// Returns is either the return type for functions or the empty string for
 	// procedures.
 	Returns string
 }
+
+type Parameters []*Parameter
 
 type Parameter struct {
 	Names []string
