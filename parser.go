@@ -17,85 +17,133 @@ type parser struct {
 	isPeeking bool
 	peekingAt token
 	file      File
-	err       error
 }
 
 func (p *parser) parseFile() (*File, error) {
 	// For now only parse units until we have tests for other kinds.
-	p.eatWord("unit")
+	if err := p.eatWord("unit"); err != nil {
+		return nil, err
+	}
 	p.file.Kind = Unit
-	p.file.Name = p.qualifiedIdentifier("unit name")
-	p.eat(';')
+	unitName, err := p.qualifiedIdentifier("unit name")
+	if err != nil {
+		return nil, err
+	}
+	p.file.Name = unitName
+	if err := p.eat(';'); err != nil {
+		return nil, err
+	}
 
-	p.eatWord("interface")
-	p.parseFileSection(InterfaceSection)
+	if err := p.eatWord("interface"); err != nil {
+		return nil, err
+	}
+	if err := p.parseFileSection(InterfaceSection); err != nil {
+		return nil, err
+	}
 
-	p.eatWord("implementation")
-	p.parseFileSection(ImplementationSection)
+	if err := p.eatWord("implementation"); err != nil {
+		return nil, err
+	}
+	if err := p.parseFileSection(ImplementationSection); err != nil {
+		return nil, err
+	}
 
-	p.eatWord("end")
-	p.eat('.')
-	return &p.file, p.err
+	if err := p.eatWord("end"); err != nil {
+		return nil, err
+	}
+	if err := p.eat('.'); err != nil {
+		return nil, err
+	}
+	return &p.file, nil
 }
 
-func (p *parser) parseFileSection(kind FileSectionKind) {
-	uses := p.parseUses()
-	blocks := p.parseSectionBlocks()
+func (p *parser) parseFileSection(kind FileSectionKind) error {
+	uses, err := p.parseUses()
+	if err != nil {
+		return err
+	}
+	blocks, err := p.parseSectionBlocks()
+	if err != nil {
+		return err
+	}
 	p.file.Sections = append(p.file.Sections, FileSection{
 		Kind:   kind,
 		Uses:   uses,
 		Blocks: blocks,
 	})
+	return nil
 }
 
-func (p *parser) parseUses() []string {
+func (p *parser) parseUses() ([]string, error) {
 	var uses []string
 	if p.seesWordAndEat("uses") {
-		uses = append(uses, p.qualifiedIdentifier("uses clause"))
+		unitName, err := p.qualifiedIdentifier("uses clause")
+		if err != nil {
+			return nil, err
+		}
+		uses = append(uses, unitName)
 		for p.seesAndEat(',') {
-			uses = append(uses, p.qualifiedIdentifier("uses clause"))
+			unitName, err := p.qualifiedIdentifier("uses clause")
+			if err != nil {
+				return nil, err
+			}
+			uses = append(uses, unitName)
 		}
 		p.eat(';')
 	}
-	return uses
+	return uses, nil
 }
 
-func (p *parser) parseSectionBlocks() []FileSectionBlock {
+func (p *parser) parseSectionBlocks() ([]FileSectionBlock, error) {
 	var blocks []FileSectionBlock
 	for {
 		if p.seesWord("type") {
-			blocks = append(blocks, p.parseTypeBlock())
+			typeBlock, err := p.parseTypeBlock()
+			if err != nil {
+				return nil, err
+			}
+			blocks = append(blocks, typeBlock)
 		} else if p.seesWord("var") {
-			blocks = append(blocks, p.parseVarBlock())
+			varBlock, err := p.parseVarBlock()
+			if err != nil {
+				return nil, err
+			}
+			blocks = append(blocks, varBlock)
 		} else {
 			break
 		}
 	}
-	return blocks
+	return blocks, nil
 }
 
-func (p *parser) parseTypeBlock() FileSectionBlock {
+// TODO change to return *TypeBlock
+func (p *parser) parseTypeBlock() (FileSectionBlock, error) {
 	p.eatWord("type")
-	identifier := p.identifier("type name")
+	identifier, err := p.identifier("type name")
+	if err != nil {
+		return nil, err
+	}
 	p.eat('=')
 	if p.seesWord("class") {
 		var class Class
 		class.Name = identifier
 		p.eatWord("class")
 		if p.seesAndEat('(') {
-			class.SuperClasses = append(
-				class.SuperClasses,
-				p.qualifiedIdentifier("parent class name"),
-			)
+			className, err := p.qualifiedIdentifier("parent class name")
+			if err != nil {
+				return nil, err
+			}
+			class.SuperClasses = append(class.SuperClasses, className)
 			for p.seesAndEat(',') {
-				class.SuperClasses = append(
-					class.SuperClasses,
-					p.qualifiedIdentifier("parent interface name"),
-				)
+				intf, err := p.qualifiedIdentifier("parent interface name")
+				if err != nil {
+					return nil, err
+				}
+				class.SuperClasses = append(class.SuperClasses, intf)
 			}
 			p.eat(')')
 		}
-		for !(p.seesWord("end") || p.err != nil) {
+		for !p.seesWord("end") {
 			if p.seesWordAndEat("published") {
 				class.newSection(Published)
 			} else if p.seesWordAndEat("public") {
@@ -105,43 +153,69 @@ func (p *parser) parseTypeBlock() FileSectionBlock {
 			} else if p.seesWordAndEat("private") {
 				class.newSection(Private)
 			} else if p.seesWordAndEat("procedure") || p.seesWordAndEat("function") {
-				class.appendMemberToCurrentSection(p.parseFunctionDeclaration())
+				f, err := p.parseFunctionDeclaration()
+				if err != nil {
+					return nil, err
+				}
+				class.appendMemberToCurrentSection(f)
 			} else {
-				class.appendMemberToCurrentSection(p.parseVariableDeclaration())
+				v, err := p.parseVariableDeclaration()
+				if err != nil {
+					return nil, err
+				}
+				class.appendMemberToCurrentSection(v)
 			}
 		}
 		p.eatWord("end")
 		p.eat(';')
-		return TypeBlock{class}
+		return TypeBlock{class}, nil
 	} else {
 		var record Record
 		record.Name = identifier
 		p.eatWord("record")
-		for !(p.seesWord("end") || p.err != nil) {
+		for !p.seesWord("end") {
 			if p.seesWordAndEat("procedure") || p.seesWordAndEat("function") {
-				record.appendMember(p.parseFunctionDeclaration())
+				f, err := p.parseFunctionDeclaration()
+				if err != nil {
+					return nil, err
+				}
+				record.appendMember(f)
 			} else {
-				record.appendMember(p.parseVariableDeclaration())
+				v, err := p.parseVariableDeclaration()
+				if err != nil {
+					return nil, err
+				}
+				record.appendMember(v)
 			}
 		}
 		p.eatWord("end")
 		p.eat(';')
-		return TypeBlock{record}
+		return TypeBlock{record}, nil
 	}
 }
 
-func (p *parser) parseVarBlock() FileSectionBlock {
+// TODO change to return *VarBlock
+func (p *parser) parseVarBlock() (FileSectionBlock, error) {
 	p.eatWord("var")
 	var vars VarBlock
 	for p.sees(tokenWord) && !p.seesKeyword() {
-		vars = append(vars, p.parseVariableDeclaration())
+		varDec, err := p.parseVariableDeclaration()
+		if err != nil {
+			return nil, err
+		}
+		vars = append(vars, varDec)
 	}
-	return vars
+	return vars, nil
 }
 
-func (p *parser) parseFunctionDeclaration() ClassMember {
+// TODO change to return *Function
+func (p *parser) parseFunctionDeclaration() (ClassMember, error) {
 	var f Function
-	f.Name = p.identifier("function name")
+	var err error
+	f.Name, err = p.identifier("function name")
+	if err != nil {
+		return nil, err
+	}
 	if p.seesAndEat('(') {
 		for p.sees(tokenWord) || p.sees('[') {
 			var param Parameter
@@ -164,12 +238,24 @@ func (p *parser) parseFunctionDeclaration() ClassMember {
 				param.Qualifier = RefConst
 			}
 
-			param.Names = append(param.Names, p.identifier("parameter name"))
+			firstId, err := p.identifier("parameter name")
+			if err != nil {
+				return f, err
+			}
+			param.Names = append(param.Names, firstId)
 			for p.seesAndEat(',') {
-				param.Names = append(param.Names, p.identifier("parameter name"))
+				id, err := p.identifier("parameter name")
+				if err != nil {
+					return f, err
+				}
+				param.Names = append(param.Names, id)
 			}
 			if p.seesAndEat(':') {
-				param.Type = p.qualifiedIdentifier("parameter type")
+				pt, err := p.qualifiedIdentifier("parameter type")
+				if err != nil {
+					return f, err
+				}
+				param.Type = pt
 			}
 			f.Parameters = append(f.Parameters, param)
 			if !p.seesAndEat(';') {
@@ -179,19 +265,31 @@ func (p *parser) parseFunctionDeclaration() ClassMember {
 		p.eat(')')
 	}
 	if p.seesAndEat(':') {
-		f.Returns = p.qualifiedIdentifier("return type")
+		rt, err := p.qualifiedIdentifier("return type")
+		if err != nil {
+			return f, err
+		}
+		f.Returns = rt
 	}
 	p.eat(';')
-	return f
+	return f, nil
 }
 
-func (p *parser) parseVariableDeclaration() Variable {
+// TODO change to return *Variable
+func (p *parser) parseVariableDeclaration() (Variable, error) {
 	var v Variable
-	v.Name = p.identifier("field name")
+	var err error
+	v.Name, err = p.identifier("field name")
+	if err != nil {
+		return v, err
+	}
 	p.eat(':')
-	v.Type = p.qualifiedIdentifier("type name")
+	v.Type, err = p.qualifiedIdentifier("type name")
+	if err != nil {
+		return v, err
+	}
 	p.eat(';')
-	return v
+	return v, nil
 }
 
 func (p *parser) nextToken() token {
@@ -218,17 +316,11 @@ func (p *parser) peekToken() token {
 }
 
 func (p *parser) sees(typ tokenType) bool {
-	if p.err != nil {
-		return false
-	}
 	t := p.peekToken()
 	return t.tokenType == typ
 }
 
 func (p *parser) seesAndEat(typ tokenType) bool {
-	if p.err != nil {
-		return false
-	}
 	t := p.peekToken()
 	if t.tokenType == typ {
 		p.nextToken()
@@ -238,17 +330,11 @@ func (p *parser) seesAndEat(typ tokenType) bool {
 }
 
 func (p *parser) seesWord(text string) bool {
-	if p.err != nil {
-		return false
-	}
 	t := p.peekToken()
 	return t.tokenType == tokenWord && strings.ToLower(t.text) == text
 }
 
 func (p *parser) seesWordAndEat(text string) bool {
-	if p.err != nil {
-		return false
-	}
 	t := p.peekToken()
 	if t.tokenType == tokenWord && strings.ToLower(t.text) == text {
 		p.nextToken()
@@ -258,9 +344,6 @@ func (p *parser) seesWordAndEat(text string) bool {
 }
 
 func (p *parser) seesKeyword() bool {
-	if p.err != nil {
-		return false
-	}
 	t := p.peekToken()
 	return t.tokenType == tokenWord && isKeyword(strings.ToLower(t.text))
 }
@@ -270,24 +353,20 @@ func isKeyword(s string) bool {
 	return s == "implementation" || s == "var"
 }
 
-func (p *parser) eat(typ tokenType) {
-	if p.err != nil {
-		return
-	}
+func (p *parser) eat(typ tokenType) error {
 	t := p.nextToken()
 	if t.tokenType != typ {
-		p.tokenError(t, typ.String())
+		return p.tokenError(t, typ.String())
 	}
+	return nil
 }
 
-func (p *parser) eatWord(text string) {
-	if p.err != nil {
-		return
-	}
+func (p *parser) eatWord(text string) error {
 	t := p.nextToken()
 	if !(t.tokenType == tokenWord && strings.ToLower(t.text) == text) {
-		p.tokenError(t, `keyword "`+text+`"`)
+		return p.tokenError(t, `keyword "`+text+`"`)
 	}
+	return nil
 }
 
 // qualifiedIdentifier parses identifiers with dots in them, e.g.
@@ -295,26 +374,29 @@ func (p *parser) eatWord(text string) {
 //     Systems.Generics.Collections
 //
 // There might be comments or white space between the identifiers and dots.
-func (p *parser) qualifiedIdentifier(description string) string {
-	s := p.identifier(description)
-	for p.seesAndEat('.') {
-		s += "." + p.identifier(description)
+func (p *parser) qualifiedIdentifier(description string) (string, error) {
+	s, err := p.identifier(description)
+	if err != nil {
+		return "", err
 	}
-	return s
+	for p.seesAndEat('.') {
+		id, err := p.identifier(description)
+		if err != nil {
+			return "", err
+		}
+		s += "." + id
+	}
+	return s, nil
 }
 
-func (p *parser) identifier(description string) string {
-	if p.err != nil {
-		return ""
-	}
+func (p *parser) identifier(description string) (string, error) {
 	t := p.nextToken()
 	if t.tokenType == tokenWord {
-		return t.text
+		return t.text, nil
 	}
-	p.tokenError(t, description)
-	return ""
+	return "", p.tokenError(t, description)
 }
 
-func (p *parser) tokenError(t token, expected string) {
-	p.err = errors.New(expected + " expected but was " + t.String())
+func (p *parser) tokenError(t token, expected string) error {
+	return errors.New(expected + " expected but was " + t.String())
 }
