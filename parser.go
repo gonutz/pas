@@ -76,7 +76,10 @@ func (p *parser) parseFileSection(kind FileSectionKind) error {
 
 func (p *parser) parseUses() ([]string, error) {
 	var uses []string
-	if p.seesWordAndEat("uses") {
+	if p.seesWord("uses") {
+		if err := p.eatWord("uses"); err != nil {
+			return nil, err
+		}
 		unitName, err := p.qualifiedIdentifier("uses clause")
 		if err != nil {
 			return nil, err
@@ -163,15 +166,39 @@ func (p *parser) parseTypeBlock() (FileSectionBlock, error) {
 			}
 		}
 		for !p.seesWord("end") {
-			if p.seesWordAndEat("published") {
+			if p.seesWord("published") {
+				if err := p.eatWord("published"); err != nil {
+					return nil, err
+				}
 				class.newSection(Published)
-			} else if p.seesWordAndEat("public") {
+			} else if p.seesWord("public") {
+				if err := p.eatWord("public"); err != nil {
+					return nil, err
+				}
 				class.newSection(Public)
-			} else if p.seesWordAndEat("protected") {
+			} else if p.seesWord("protected") {
+				if err := p.eatWord("protected"); err != nil {
+					return nil, err
+				}
 				class.newSection(Protected)
-			} else if p.seesWordAndEat("private") {
+			} else if p.seesWord("private") {
+				if err := p.eatWord("private"); err != nil {
+					return nil, err
+				}
 				class.newSection(Private)
-			} else if p.seesWordAndEat("procedure") || p.seesWordAndEat("function") {
+			} else if p.seesWord("procedure") {
+				if err := p.eatWord("procedure"); err != nil {
+					return nil, err
+				}
+				f, err := p.parseFunctionDeclaration()
+				if err != nil {
+					return nil, err
+				}
+				class.appendMemberToCurrentSection(f)
+			} else if p.seesWord("function") {
+				if err := p.eatWord("function"); err != nil {
+					return nil, err
+				}
 				f, err := p.parseFunctionDeclaration()
 				if err != nil {
 					return nil, err
@@ -199,7 +226,19 @@ func (p *parser) parseTypeBlock() (FileSectionBlock, error) {
 			return nil, err
 		}
 		for !p.seesWord("end") {
-			if p.seesWordAndEat("procedure") || p.seesWordAndEat("function") {
+			if p.seesWord("procedure") {
+				if err := p.eatWord("procedure"); err != nil {
+					return nil, err
+				}
+				f, err := p.parseFunctionDeclaration()
+				if err != nil {
+					return nil, err
+				}
+				record.appendMember(f)
+			} else if p.seesWord("function") {
+				if err := p.eatWord("function"); err != nil {
+					return nil, err
+				}
 				f, err := p.parseFunctionDeclaration()
 				if err != nil {
 					return nil, err
@@ -254,9 +293,15 @@ func (p *parser) parseFunctionDeclaration() (ClassMember, error) {
 		for p.sees(tokenWord) || p.sees('[') {
 			var param Parameter
 
-			if p.seesWordAndEat("var") {
+			if p.seesWord("var") {
+				if err := p.eatWord("var"); err != nil {
+					return nil, err
+				}
 				param.Qualifier = Var
-			} else if p.seesWordAndEat("const") {
+			} else if p.seesWord("const") {
+				if err := p.eatWord("const"); err != nil {
+					return nil, err
+				}
 				param.Qualifier = Const
 				if p.sees('[') {
 					if err := p.eat('['); err != nil {
@@ -270,7 +315,10 @@ func (p *parser) parseFunctionDeclaration() (ClassMember, error) {
 					}
 					param.Qualifier = ConstRef
 				}
-			} else if p.seesWordAndEat("out") {
+			} else if p.seesWord("out") {
+				if err := p.eatWord("out"); err != nil {
+					return nil, err
+				}
 				param.Qualifier = Out
 			} else if p.sees('[') {
 				if err := p.eat('['); err != nil {
@@ -393,15 +441,6 @@ func (p *parser) sees(typ tokenType) bool {
 func (p *parser) seesWord(text string) bool {
 	t := p.peekToken()
 	return t.tokenType == tokenWord && strings.ToLower(t.text) == text
-}
-
-func (p *parser) seesWordAndEat(text string) bool {
-	t := p.peekToken()
-	if t.tokenType == tokenWord && strings.ToLower(t.text) == text {
-		p.nextToken()
-		return true
-	}
-	return false
 }
 
 func (p *parser) seesKeyword() bool {
