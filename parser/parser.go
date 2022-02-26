@@ -152,6 +152,76 @@ func (p *parser) parseTypeBlock() (ast.TypeBlock, error) {
 	}
 }
 
+type namedProc struct {
+	name string
+	fn   func(*parser, string) error
+}
+
+type procSelector struct {
+	procs       []*namedProc
+	defaultProc func(*parser) error
+}
+
+func (fs *procSelector) Do(p *parser) error {
+	processed := false
+	for _, proc := range fs.procs {
+		if p.seesWord(proc.name) {
+			if err := proc.fn(p, proc.name); err != nil {
+				return err
+			}
+			processed = true
+			break
+		}
+	}
+	if !processed {
+		if err := fs.defaultProc(p); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func classMemberProcessor(class *ast.Class) *procSelector {
+	newSection := func(visibility ast.Visibility) func(p *parser, name string) error {
+		return func(p *parser, name string) error {
+			if err := p.eatWord(name); err != nil {
+				return err
+			}
+			class.NewSection(visibility)
+			return nil
+		}
+	}
+	appendFunc := func(p *parser, name string) error {
+		if err := p.eatWord(name); err != nil {
+			return err
+		}
+		f, err := p.parseFunctionDeclaration()
+		if err != nil {
+			return err
+		}
+		class.AppendMemberToCurrentSection(f)
+		return nil
+	}
+	return &procSelector{
+		procs: []*namedProc{
+			{"published", newSection(ast.Published)},
+			{"public", newSection(ast.Public)},
+			{"protected", newSection(ast.Protected)},
+			{"private", newSection(ast.Private)},
+			{"procedure", appendFunc},
+			{"function", appendFunc},
+		},
+		defaultProc: func(p *parser) error {
+			v, err := p.parseVariableDeclaration()
+			if err != nil {
+				return err
+			}
+			class.AppendMemberToCurrentSection(v)
+			return nil
+		},
+	}
+}
+
 func (p *parser) parseClass(identifier string) (*ast.Class, error) {
 	class := &ast.Class{Name: identifier}
 	if err := p.eatWord("class"); err != nil {
@@ -181,64 +251,10 @@ func (p *parser) parseClass(identifier string) (*ast.Class, error) {
 		}
 	}
 
-	type classMemberProc struct {
-		name string
-		fn   func(string) error
-	}
-
-	newSection := func(visibility ast.Visibility) func(name string) error {
-		return func(name string) error {
-			if err := p.eatWord(name); err != nil {
-				return err
-			}
-			class.NewSection(visibility)
-			return nil
-		}
-	}
-	appendFunc := func(name string) error {
-		if err := p.eatWord(name); err != nil {
-			return err
-		}
-		f, err := p.parseFunctionDeclaration()
-		if err != nil {
-			return err
-		}
-		class.AppendMemberToCurrentSection(f)
-		return nil
-	}
-	appendVar := func() error {
-		v, err := p.parseVariableDeclaration()
-		if err != nil {
-			return err
-		}
-		class.AppendMemberToCurrentSection(v)
-		return nil
-	}
-
-	procs := []*classMemberProc{
-		{"published", newSection(ast.Published)},
-		{"public", newSection(ast.Public)},
-		{"protected", newSection(ast.Protected)},
-		{"private", newSection(ast.Private)},
-		{"procedure", appendFunc},
-		{"function", appendFunc},
-	}
-
+	proc := classMemberProcessor(class)
 	for !p.seesWord("end") {
-		processed := false
-		for _, proc := range procs {
-			if p.seesWord(proc.name) {
-				if err := proc.fn(proc.name); err != nil {
-					return nil, err
-				}
-				processed = true
-				break
-			}
-		}
-		if !processed {
-			if err := appendVar(); err != nil {
-				return nil, err
-			}
+		if err := proc.Do(p); err != nil {
+			return nil, err
 		}
 	}
 	if err := p.eatWord("end"); err != nil {
