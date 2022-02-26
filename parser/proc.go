@@ -2,7 +2,7 @@ package parser
 
 type namedProc struct {
 	name string
-	fn   func(*parser, string) error
+	fn   func(*parser) error
 }
 
 type procSelector struct {
@@ -14,7 +14,10 @@ func (fs *procSelector) Do(p *parser) error {
 	processed := false
 	for _, proc := range fs.procs {
 		if p.seesWord(proc.name) {
-			if err := proc.fn(p, proc.name); err != nil {
+			if err := p.eatWord(proc.name); err != nil {
+				return err
+			}
+			if err := proc.fn(p); err != nil {
 				return err
 			}
 			processed = true

@@ -3,10 +3,7 @@ package parser
 import "github.com/akm/pas/ast"
 
 func recordProcessor(record *ast.Record) func(p *parser) error {
-	appendFunc := func(p *parser, word string) error {
-		if err := p.eatWord(word); err != nil {
-			return err
-		}
+	appendFunc := func(p *parser) error {
 		f, err := p.parseFunctionDeclaration()
 		if err != nil {
 			return err

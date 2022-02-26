@@ -3,19 +3,13 @@ package parser
 import "github.com/akm/pas/ast"
 
 func classProcessor(class *ast.Class) func(p *parser) error {
-	newSection := func(visibility ast.Visibility) func(p *parser, name string) error {
-		return func(p *parser, name string) error {
-			if err := p.eatWord(name); err != nil {
-				return err
-			}
+	newSection := func(visibility ast.Visibility) func(p *parser) error {
+		return func(p *parser) error {
 			class.NewSection(visibility)
 			return nil
 		}
 	}
-	appendFunc := func(p *parser, name string) error {
-		if err := p.eatWord(name); err != nil {
-			return err
-		}
+	appendMethod := func(p *parser) error {
 		f, err := p.parseFunctionDeclaration()
 		if err != nil {
 			return err
@@ -25,23 +19,24 @@ func classProcessor(class *ast.Class) func(p *parser) error {
 		})
 		return nil
 	}
+	appendField := func(p *parser) error {
+		v, err := p.parseVariableDeclaration()
+		if err != nil {
+			return err
+		}
+		class.AppendMemberToCurrentSection(&ast.Field{Variable: *v})
+		return nil
+	}
 	selector := &procSelector{
 		procs: []*namedProc{
 			{"published", newSection(ast.Published)},
 			{"public", newSection(ast.Public)},
 			{"protected", newSection(ast.Protected)},
 			{"private", newSection(ast.Private)},
-			{"procedure", appendFunc},
-			{"function", appendFunc},
+			{"procedure", appendMethod},
+			{"function", appendMethod},
 		},
-		defaultProc: func(p *parser) error {
-			v, err := p.parseVariableDeclaration()
-			if err != nil {
-				return err
-			}
-			class.AppendMemberToCurrentSection(&ast.Field{Variable: *v})
-			return nil
-		},
+		defaultProc: appendField,
 	}
 	return func(p *parser) error {
 		if err := p.eatWord("class"); err != nil {
