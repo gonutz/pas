@@ -62,7 +62,7 @@ func (t *tokenizer) next() token {
 			for unicode.IsSpace(t.nextRune()) {
 			}
 			haveType = tokenWhiteSpace
-		} else if r == '_' || unicode.IsLetter(r) {
+		} else if r == '_' || unicode.IsLetter(r) || isDigit(r) {
 			word := func(r rune) bool {
 				return r == '_' || unicode.IsLetter(r) || isDigit(r)
 			}
