@@ -1,11 +1,15 @@
 package ast
 
+// https://docwiki.embarcadero.com/RADStudio/Alexandria/ja/%E3%82%AF%E3%83%A9%E3%82%B9%E3%81%A8%E3%82%AA%E3%83%96%E3%82%B8%E3%82%A7%E3%82%AF%E3%83%88%EF%BC%88Delphi%EF%BC%89
+
 func (*Class) isTypeDeclaration() {}
 
 type Class struct {
 	Name         string
 	SuperClasses []string
 	Sections     []ClassSection
+	Abstract     bool
+	Sealed       bool
 }
 
 func (c *Class) AppendMemberToCurrentSection(member ClassMember) {
@@ -51,4 +55,46 @@ func (v Visibility) String() string {
 
 type ClassMember interface {
 	isClassMember()
+}
+
+func (*Field) isClassMember() {}
+
+type Field struct {
+	Variable
+	Class bool
+}
+
+type MethodType int
+
+const (
+	NormalMethod MethodType = iota + 1
+	Constructor
+	Destructor
+)
+
+func (*Method) isClassMember() {}
+
+type Method struct {
+	Function
+	Type        MethodType
+	Class       bool
+	Strict      bool
+	Virtual     bool
+	Dynamic     bool
+	Override    bool
+	Overload    bool
+	Reintroduce bool
+	Final       bool
+}
+
+func (*Property) isClassMember() {}
+
+type Property struct {
+	Variable
+	Indexes   []*Parameter
+	Reader    string
+	Getter    string
+	Stored    string
+	Default   string
+	Nodefault bool
 }

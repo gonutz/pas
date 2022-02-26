@@ -11,7 +11,7 @@ func recordProcessor(record *ast.Record) func(p *parser) error {
 		if err != nil {
 			return err
 		}
-		record.AppendMember(f)
+		record.AppendMember(&ast.Method{Function: *f})
 		return nil
 	}
 
@@ -25,7 +25,7 @@ func recordProcessor(record *ast.Record) func(p *parser) error {
 			if err != nil {
 				return err
 			}
-			record.AppendMember(v)
+			record.AppendMember(&ast.Field{Variable: *v})
 			return nil
 		},
 	}

@@ -1,7 +1,5 @@
 package ast
 
-func (*Function) isClassMember() {}
-
 type Function struct {
 	Name       string
 	Parameters []*Parameter

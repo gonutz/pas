@@ -20,7 +20,9 @@ func classProcessor(class *ast.Class) func(p *parser) error {
 		if err != nil {
 			return err
 		}
-		class.AppendMemberToCurrentSection(f)
+		class.AppendMemberToCurrentSection(&ast.Method{
+			Function: *f,
+		})
 		return nil
 	}
 	selector := &procSelector{
@@ -37,7 +39,7 @@ func classProcessor(class *ast.Class) func(p *parser) error {
 			if err != nil {
 				return err
 			}
-			class.AppendMemberToCurrentSection(v)
+			class.AppendMemberToCurrentSection(&ast.Field{Variable: *v})
 			return nil
 		},
 	}
