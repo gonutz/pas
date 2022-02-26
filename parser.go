@@ -1,10 +1,10 @@
 package pas
 
 import (
-	"errors"
 	"strings"
 
 	"github.com/akm/pas/ast"
+	"github.com/pkg/errors"
 )
 
 func newParser(code []rune) *parser {
@@ -221,10 +221,10 @@ func (p *parser) parseTypeBlock() (ast.TypeBlock, error) {
 				}
 			}
 			if !processed {
-			if err := appendVar(); err != nil {
-				return nil, err
+				if err := appendVar(); err != nil {
+					return nil, err
+				}
 			}
-		}
 		}
 		if err := p.eatWord("end"); err != nil {
 			return nil, err
@@ -372,7 +372,11 @@ func (p *parser) parseFunctionDeclaration() (res *ast.Function, rerr error) {
 				param.Type = pt
 			}
 			f.Parameters = append(f.Parameters, param)
-			if !p.sees(';') {
+			if p.sees(';') {
+				p.eat(';')
+			} else if p.sees(')') {
+				break
+			} else {
 				if err := p.eat(','); err != nil {
 					return nil, err
 				}
