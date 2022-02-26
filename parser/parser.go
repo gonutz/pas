@@ -76,32 +76,46 @@ func (p *parser) parseFileSection(kind ast.FileSectionKind) error {
 	return nil
 }
 
+func (p *parser) parseSeparatedString(separator tokenType, identifierDesc string, extraIdentifierDescs ...string) ([]string, error) {
+	res := []string{}
+	s, err := p.qualifiedIdentifier(identifierDesc)
+	if err != nil {
+		return nil, err
+	}
+	res = append(res, s)
+
+	if len(extraIdentifierDescs) > 0 {
+		identifierDesc = extraIdentifierDescs[0]
+	}
+	for p.sees(separator) {
+		if err := p.eat(separator); err != nil {
+			return nil, err
+		}
+		s, err := p.qualifiedIdentifier(identifierDesc)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, s)
+	}
+	return res, nil
+}
+
 func (p *parser) parseUses() ([]string, error) {
-	var uses []string
 	if p.seesWord("uses") {
 		if err := p.eatWord("uses"); err != nil {
 			return nil, err
 		}
-		unitName, err := p.qualifiedIdentifier("uses clause")
+		uses, err := p.parseSeparatedString(',', "uses clause")
 		if err != nil {
 			return nil, err
-		}
-		uses = append(uses, unitName)
-		for p.sees(',') {
-			if err := p.eat(','); err != nil {
-				return nil, err
-			}
-			unitName, err := p.qualifiedIdentifier("uses clause")
-			if err != nil {
-				return nil, err
-			}
-			uses = append(uses, unitName)
 		}
 		if err := p.eat(';'); err != nil {
 			return nil, err
 		}
+		return uses, nil
+	} else {
+		return nil, nil
 	}
-	return uses, nil
 }
 
 func (p *parser) parseSectionBlocks() ([]ast.FileSectionBlock, error) {
@@ -231,21 +245,11 @@ func (p *parser) parseClass(identifier string) (*ast.Class, error) {
 		if err := p.eat('('); err != nil {
 			return nil, err
 		}
-		className, err := p.qualifiedIdentifier("parent class name")
+		superClassNames, err := p.parseSeparatedString(',', "parent class name", "parent interface name")
 		if err != nil {
 			return nil, err
 		}
-		class.SuperClasses = append(class.SuperClasses, className)
-		for p.sees(',') {
-			if err := p.eat(','); err != nil {
-				return nil, err
-			}
-			intf, err := p.qualifiedIdentifier("parent interface name")
-			if err != nil {
-				return nil, err
-			}
-			class.SuperClasses = append(class.SuperClasses, intf)
-		}
+		class.SuperClasses = superClassNames
 		if err := p.eat(')'); err != nil {
 			return nil, err
 		}
