@@ -165,51 +165,59 @@ func (p *parser) parseTypeBlock() (FileSectionBlock, error) {
 				return nil, err
 			}
 		}
+
+		type classMemberProc struct {
+			name string
+			fn   func(string) error
+		}
+
+		newSection := func(name string) error {
+			if err := p.eatWord(name); err != nil {
+				return err
+			}
+			class.newSection(Published)
+			return nil
+		}
+		appendFunc := func(name string) error {
+			if err := p.eatWord(name); err != nil {
+				return err
+			}
+			f, err := p.parseFunctionDeclaration()
+			if err != nil {
+				return err
+			}
+			class.appendMemberToCurrentSection(f)
+			return nil
+		}
+		appendVar := func() error {
+			v, err := p.parseVariableDeclaration()
+			if err != nil {
+				return err
+			}
+			class.appendMemberToCurrentSection(v)
+			return nil
+		}
+
+		procs := []*classMemberProc{
+			{"published", newSection},
+			{"public", newSection},
+			{"protected", newSection},
+			{"private", newSection},
+			{"procedure", appendFunc},
+			{"function", appendFunc},
+		}
+
 		for !p.seesWord("end") {
-			if p.seesWord("published") {
-				if err := p.eatWord("published"); err != nil {
-					return nil, err
+			for _, proc := range procs {
+				if p.seesWord(proc.name) {
+					if err := proc.fn(proc.name); err != nil {
+						return nil, err
+					}
+					break
 				}
-				class.newSection(Published)
-			} else if p.seesWord("public") {
-				if err := p.eatWord("public"); err != nil {
-					return nil, err
-				}
-				class.newSection(Public)
-			} else if p.seesWord("protected") {
-				if err := p.eatWord("protected"); err != nil {
-					return nil, err
-				}
-				class.newSection(Protected)
-			} else if p.seesWord("private") {
-				if err := p.eatWord("private"); err != nil {
-					return nil, err
-				}
-				class.newSection(Private)
-			} else if p.seesWord("procedure") {
-				if err := p.eatWord("procedure"); err != nil {
-					return nil, err
-				}
-				f, err := p.parseFunctionDeclaration()
-				if err != nil {
-					return nil, err
-				}
-				class.appendMemberToCurrentSection(f)
-			} else if p.seesWord("function") {
-				if err := p.eatWord("function"); err != nil {
-					return nil, err
-				}
-				f, err := p.parseFunctionDeclaration()
-				if err != nil {
-					return nil, err
-				}
-				class.appendMemberToCurrentSection(f)
-			} else {
-				v, err := p.parseVariableDeclaration()
-				if err != nil {
-					return nil, err
-				}
-				class.appendMemberToCurrentSection(v)
+			}
+			if err := appendVar(); err != nil {
+				return nil, err
 			}
 		}
 		if err := p.eatWord("end"); err != nil {
