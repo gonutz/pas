@@ -17,14 +17,14 @@ type tokenizer struct {
 	col  int
 }
 
+func isDigit(r rune) bool {
+	return '0' <= r && r <= '9'
+}
+
 func (t *tokenizer) next() token {
 	haveType := tokenIllegal
 	start := t.cur
 	line, col := t.line, t.col
-
-	digit := func(r rune) bool {
-		return '0' <= r && r <= '9'
-	}
 
 	r := t.currentRune()
 	switch r {
@@ -64,7 +64,7 @@ func (t *tokenizer) next() token {
 			haveType = tokenWhiteSpace
 		} else if r == '_' || unicode.IsLetter(r) {
 			word := func(r rune) bool {
-				return r == '_' || unicode.IsLetter(r) || digit(r)
+				return r == '_' || unicode.IsLetter(r) || isDigit(r)
 			}
 			for word(t.nextRune()) {
 			}
