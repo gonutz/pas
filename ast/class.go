@@ -37,6 +37,18 @@ const (
 	Private          Visibility = 4
 )
 
+var visibilityToString = map[Visibility]string{
+	DefaultPublished: "",
+	Published:        "published",
+	Public:           "public",
+	Protected:        "protected",
+	Private:          "private",
+}
+
+func (v Visibility) String() string {
+	return visibilityToString[v]
+}
+
 type ClassMember interface {
 	isClassMember()
 }

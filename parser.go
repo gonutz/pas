@@ -171,13 +171,15 @@ func (p *parser) parseTypeBlock() (ast.TypeBlock, error) {
 			fn   func(string) error
 		}
 
-		newSection := func(name string) error {
+		newSection := func(visibility ast.Visibility) func(name string) error {
+			return func(name string) error {
 				if err := p.eatWord(name); err != nil {
 					return err
 				}
-				class.NewSection(ast.Published)
+				class.NewSection(visibility)
 				return nil
 			}
+		}
 		appendFunc := func(name string) error {
 			if err := p.eatWord(name); err != nil {
 				return err
@@ -199,10 +201,10 @@ func (p *parser) parseTypeBlock() (ast.TypeBlock, error) {
 		}
 
 		procs := []*classMemberProc{
-			{"published", newSection},
-			{"public", newSection},
-			{"protected", newSection},
-			{"private", newSection},
+			{"published", newSection(ast.Published)},
+			{"public", newSection(ast.Public)},
+			{"protected", newSection(ast.Protected)},
+			{"private", newSection(ast.Private)},
 			{"procedure", appendFunc},
 			{"function", appendFunc},
 		}
