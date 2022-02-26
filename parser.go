@@ -76,41 +76,58 @@ func (p *parser) parseSectionBlocks() []FileSectionBlock {
 
 func (p *parser) parseTypeBlock() FileSectionBlock {
 	p.eatWord("type")
-	var class Class
-	class.Name = p.identifier("type name")
+	identifier := p.identifier("type name")
 	p.eat('=')
-	p.eatWord("class")
-	if p.seesAndEat('(') {
-		class.SuperClasses = append(
-			class.SuperClasses,
-			p.qualifiedIdentifier("parent class name"),
-		)
-		for p.seesAndEat(',') {
+	if p.seesWord("class") {
+		var class Class
+		class.Name = identifier
+		p.eatWord("class")
+		if p.seesAndEat('(') {
 			class.SuperClasses = append(
 				class.SuperClasses,
-				p.qualifiedIdentifier("parent interface name"),
+				p.qualifiedIdentifier("parent class name"),
 			)
+			for p.seesAndEat(',') {
+				class.SuperClasses = append(
+					class.SuperClasses,
+					p.qualifiedIdentifier("parent interface name"),
+				)
+			}
+			p.eat(')')
 		}
-		p.eat(')')
-	}
-	for !(p.seesWord("end") || p.err != nil) {
-		if p.seesWordAndEat("published") {
-			class.newSection(Published)
-		} else if p.seesWordAndEat("public") {
-			class.newSection(Public)
-		} else if p.seesWordAndEat("protected") {
-			class.newSection(Protected)
-		} else if p.seesWordAndEat("private") {
-			class.newSection(Private)
-		} else if p.seesWordAndEat("procedure") || p.seesWordAndEat("function") {
-			class.appendMemberToCurrentSection(p.parseFunctionDeclaration())
-		} else {
-			class.appendMemberToCurrentSection(p.parseVariableDeclaration())
+		for !(p.seesWord("end") || p.err != nil) {
+			if p.seesWordAndEat("published") {
+				class.newSection(Published)
+			} else if p.seesWordAndEat("public") {
+				class.newSection(Public)
+			} else if p.seesWordAndEat("protected") {
+				class.newSection(Protected)
+			} else if p.seesWordAndEat("private") {
+				class.newSection(Private)
+			} else if p.seesWordAndEat("procedure") || p.seesWordAndEat("function") {
+				class.appendMemberToCurrentSection(p.parseFunctionDeclaration())
+			} else {
+				class.appendMemberToCurrentSection(p.parseVariableDeclaration())
+			}
 		}
+		p.eatWord("end")
+		p.eat(';')
+		return TypeBlock{class}
+	} else {
+		var record Record
+		record.Name = identifier
+		p.eatWord("record")
+		for !(p.seesWord("end") || p.err != nil) {
+			if p.seesWordAndEat("procedure") || p.seesWordAndEat("function") {
+				record.appendMember(p.parseFunctionDeclaration())
+			} else {
+				record.appendMember(p.parseVariableDeclaration())
+			}
+		}
+		p.eatWord("end")
+		p.eat(';')
+		return TypeBlock{record}
 	}
-	p.eatWord("end")
-	p.eat(';')
-	return TypeBlock{class}
 }
 
 func (p *parser) parseVarBlock() FileSectionBlock {
