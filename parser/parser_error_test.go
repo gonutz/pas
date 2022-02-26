@@ -1,10 +1,9 @@
-package pas_test
+package parser
 
 import (
 	"strings"
 	"testing"
 
-	"github.com/akm/pas"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -159,7 +158,7 @@ func TestIncompleteClassFunctions(t *testing.T) {
 func parseError(t *testing.T, code, wantMessage string) {
 	t.Helper()
 	code = strings.Replace(code, "\n", "\r\n", -1)
-	_, err := pas.ParseString(code)
+	_, err := ParseString(code)
 	if err == nil {
 		t.Fatal("error expected")
 	}

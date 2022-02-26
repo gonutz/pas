@@ -1,4 +1,4 @@
-package pas
+package parser
 
 import (
 	"fmt"

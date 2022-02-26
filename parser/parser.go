@@ -1,4 +1,4 @@
-package pas
+package parser
 
 import (
 	"strings"
@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func newParser(code []rune) *parser {
+func new(code []rune) *parser {
 	return &parser{tokens: newTokenizer(code)}
 }
 

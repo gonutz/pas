@@ -1,10 +1,9 @@
-package pas_test
+package parser
 
 import (
 	"strings"
 	"testing"
 
-	"github.com/akm/pas"
 	"github.com/akm/pas/ast"
 	"github.com/stretchr/testify/assert"
 )
@@ -467,7 +466,7 @@ func TestComments(t *testing.T) {
 func parseFile(t *testing.T, code string, want *ast.File) {
 	t.Helper()
 	code = strings.Replace(code, "\n", "\r\n", -1)
-	f, err := pas.ParseString(code)
+	f, err := ParseString(code)
 	if err != nil {
 		t.Fatalf("%+v\n", err)
 	}
