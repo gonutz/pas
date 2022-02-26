@@ -166,7 +166,7 @@ func (p *parser) parseTypeBlock() (ast.TypeBlock, error) {
 	}
 }
 
-func classMemberProcessor(class *ast.Class) *procSelector {
+func classProcessor(class *ast.Class) func(p *parser) error {
 	newSection := func(visibility ast.Visibility) func(p *parser, name string) error {
 		return func(p *parser, name string) error {
 			if err := p.eatWord(name); err != nil {
@@ -187,7 +187,7 @@ func classMemberProcessor(class *ast.Class) *procSelector {
 		class.AppendMemberToCurrentSection(f)
 		return nil
 	}
-	return &procSelector{
+	selector := &procSelector{
 		procs: []*namedProc{
 			{"published", newSection(ast.Published)},
 			{"public", newSection(ast.Public)},
@@ -205,37 +205,41 @@ func classMemberProcessor(class *ast.Class) *procSelector {
 			return nil
 		},
 	}
+	return func(p *parser) error {
+		if err := p.eatWord("class"); err != nil {
+			return err
+		}
+		if p.sees('(') {
+			if err := p.eat('('); err != nil {
+				return err
+			}
+			superClassNames, err := p.parseSeparatedString(',', "parent class name", "parent interface name")
+			if err != nil {
+				return err
+			}
+			class.SuperClasses = superClassNames
+			if err := p.eat(')'); err != nil {
+				return err
+			}
+		}
+		for !p.seesWord("end") {
+			if err := selector.Do(p); err != nil {
+				return err
+			}
+		}
+		if err := p.eatWord("end"); err != nil {
+			return err
+		}
+		if err := p.eat(';'); err != nil {
+			return err
+		}
+		return nil
+	}
 }
 
 func (p *parser) parseClass(identifier string) (*ast.Class, error) {
 	class := &ast.Class{Name: identifier}
-	if err := p.eatWord("class"); err != nil {
-		return nil, err
-	}
-	if p.sees('(') {
-		if err := p.eat('('); err != nil {
-			return nil, err
-		}
-		superClassNames, err := p.parseSeparatedString(',', "parent class name", "parent interface name")
-		if err != nil {
-			return nil, err
-		}
-		class.SuperClasses = superClassNames
-		if err := p.eat(')'); err != nil {
-			return nil, err
-		}
-	}
-
-	proc := classMemberProcessor(class)
-	for !p.seesWord("end") {
-		if err := proc.Do(p); err != nil {
-			return nil, err
-		}
-	}
-	if err := p.eatWord("end"); err != nil {
-		return nil, err
-	}
-	if err := p.eat(';'); err != nil {
+	if err := classProcessor(class)(p); err != nil {
 		return nil, err
 	}
 	return class, nil
