@@ -3,6 +3,8 @@ package pas
 import (
 	"errors"
 	"strings"
+
+	"github.com/akm/pas/ast"
 )
 
 func newParser(code []rune) *parser {
@@ -16,15 +18,15 @@ type parser struct {
 	// token here. See parser.nextToken and parser.peekToken.
 	isPeeking bool
 	peekingAt token
-	file      File
+	file      ast.File
 }
 
-func (p *parser) parseFile() (*File, error) {
+func (p *parser) parseFile() (*ast.File, error) {
 	// For now only parse units until we have tests for other kinds.
 	if err := p.eatWord("unit"); err != nil {
 		return nil, err
 	}
-	p.file.Kind = Unit
+	p.file.Kind = ast.Unit
 	unitName, err := p.qualifiedIdentifier("unit name")
 	if err != nil {
 		return nil, err
@@ -37,14 +39,14 @@ func (p *parser) parseFile() (*File, error) {
 	if err := p.eatWord("interface"); err != nil {
 		return nil, err
 	}
-	if err := p.parseFileSection(InterfaceSection); err != nil {
+	if err := p.parseFileSection(ast.InterfaceSection); err != nil {
 		return nil, err
 	}
 
 	if err := p.eatWord("implementation"); err != nil {
 		return nil, err
 	}
-	if err := p.parseFileSection(ImplementationSection); err != nil {
+	if err := p.parseFileSection(ast.ImplementationSection); err != nil {
 		return nil, err
 	}
 
@@ -57,7 +59,7 @@ func (p *parser) parseFile() (*File, error) {
 	return &p.file, nil
 }
 
-func (p *parser) parseFileSection(kind FileSectionKind) error {
+func (p *parser) parseFileSection(kind ast.FileSectionKind) error {
 	uses, err := p.parseUses()
 	if err != nil {
 		return err
@@ -66,7 +68,7 @@ func (p *parser) parseFileSection(kind FileSectionKind) error {
 	if err != nil {
 		return err
 	}
-	p.file.Sections = append(p.file.Sections, &FileSection{
+	p.file.Sections = append(p.file.Sections, &ast.FileSection{
 		Kind:   kind,
 		Uses:   uses,
 		Blocks: blocks,
@@ -102,8 +104,8 @@ func (p *parser) parseUses() ([]string, error) {
 	return uses, nil
 }
 
-func (p *parser) parseSectionBlocks() ([]FileSectionBlock, error) {
-	var blocks []FileSectionBlock
+func (p *parser) parseSectionBlocks() ([]ast.FileSectionBlock, error) {
+	var blocks []ast.FileSectionBlock
 	for {
 		if p.seesWord("type") {
 			typeBlock, err := p.parseTypeBlock()
@@ -124,7 +126,7 @@ func (p *parser) parseSectionBlocks() ([]FileSectionBlock, error) {
 	return blocks, nil
 }
 
-func (p *parser) parseTypeBlock() (TypeBlock, error) {
+func (p *parser) parseTypeBlock() (ast.TypeBlock, error) {
 	if err := p.eatWord("type"); err != nil {
 		return nil, err
 	}
@@ -136,7 +138,7 @@ func (p *parser) parseTypeBlock() (TypeBlock, error) {
 		return nil, err
 	}
 	if p.seesWord("class") {
-		class := &Class{Name: identifier}
+		class := &ast.Class{Name: identifier}
 		if err := p.eatWord("class"); err != nil {
 			return nil, err
 		}
@@ -170,12 +172,12 @@ func (p *parser) parseTypeBlock() (TypeBlock, error) {
 		}
 
 		newSection := func(name string) error {
-			if err := p.eatWord(name); err != nil {
-				return err
+				if err := p.eatWord(name); err != nil {
+					return err
+				}
+				class.NewSection(ast.Published)
+				return nil
 			}
-			class.newSection(Published)
-			return nil
-		}
 		appendFunc := func(name string) error {
 			if err := p.eatWord(name); err != nil {
 				return err
@@ -184,7 +186,7 @@ func (p *parser) parseTypeBlock() (TypeBlock, error) {
 			if err != nil {
 				return err
 			}
-			class.appendMemberToCurrentSection(f)
+			class.AppendMemberToCurrentSection(f)
 			return nil
 		}
 		appendVar := func() error {
@@ -192,7 +194,7 @@ func (p *parser) parseTypeBlock() (TypeBlock, error) {
 			if err != nil {
 				return err
 			}
-			class.appendMemberToCurrentSection(v)
+			class.AppendMemberToCurrentSection(v)
 			return nil
 		}
 
@@ -224,9 +226,9 @@ func (p *parser) parseTypeBlock() (TypeBlock, error) {
 		if err := p.eat(';'); err != nil {
 			return nil, err
 		}
-		return TypeBlock{class}, nil
+		return ast.TypeBlock{class}, nil
 	} else {
-		record := &Record{Name: identifier}
+		record := &ast.Record{Name: identifier}
 		if err := p.eatWord("record"); err != nil {
 			return nil, err
 		}
@@ -239,7 +241,7 @@ func (p *parser) parseTypeBlock() (TypeBlock, error) {
 				if err != nil {
 					return nil, err
 				}
-				record.appendMember(f)
+				record.AppendMember(f)
 			} else if p.seesWord("function") {
 				if err := p.eatWord("function"); err != nil {
 					return nil, err
@@ -248,13 +250,13 @@ func (p *parser) parseTypeBlock() (TypeBlock, error) {
 				if err != nil {
 					return nil, err
 				}
-				record.appendMember(f)
+				record.AppendMember(f)
 			} else {
 				v, err := p.parseVariableDeclaration()
 				if err != nil {
 					return nil, err
 				}
-				record.appendMember(v)
+				record.AppendMember(v)
 			}
 		}
 		if err := p.eatWord("end"); err != nil {
@@ -263,15 +265,15 @@ func (p *parser) parseTypeBlock() (TypeBlock, error) {
 		if err := p.eat(';'); err != nil {
 			return nil, err
 		}
-		return TypeBlock{record}, nil
+		return ast.TypeBlock{record}, nil
 	}
 }
 
-func (p *parser) parseVarBlock() (VarBlock, error) {
+func (p *parser) parseVarBlock() (ast.VarBlock, error) {
 	if err := p.eatWord("var"); err != nil {
 		return nil, err
 	}
-	var vars VarBlock
+	var vars ast.VarBlock
 	for p.sees(tokenWord) && !p.seesKeyword() {
 		varDec, err := p.parseVariableDeclaration()
 		if err != nil {
@@ -282,29 +284,29 @@ func (p *parser) parseVarBlock() (VarBlock, error) {
 	return vars, nil
 }
 
-func (p *parser) parseFunctionDeclaration() (res *Function, rerr error) {
+func (p *parser) parseFunctionDeclaration() (res *ast.Function, rerr error) {
 	name, err := p.identifier("function name")
 	if err != nil {
 		return nil, err
 	}
-	f := &Function{Name: name}
+	f := &ast.Function{Name: name}
 	if p.sees('(') {
 		if err := p.eat('('); err != nil {
 			return nil, err
 		}
 		for p.sees(tokenWord) || p.sees('[') {
-			param := &Parameter{}
+			param := &ast.Parameter{}
 
 			if p.seesWord("var") {
 				if err := p.eatWord("var"); err != nil {
 					return nil, err
 				}
-				param.Qualifier = Var
+				param.Qualifier = ast.Var
 			} else if p.seesWord("const") {
 				if err := p.eatWord("const"); err != nil {
 					return nil, err
 				}
-				param.Qualifier = Const
+				param.Qualifier = ast.Const
 				if p.sees('[') {
 					if err := p.eat('['); err != nil {
 						return nil, err
@@ -315,13 +317,13 @@ func (p *parser) parseFunctionDeclaration() (res *Function, rerr error) {
 					if err := p.eat(']'); err != nil {
 						return nil, err
 					}
-					param.Qualifier = ConstRef
+					param.Qualifier = ast.ConstRef
 				}
 			} else if p.seesWord("out") {
 				if err := p.eatWord("out"); err != nil {
 					return nil, err
 				}
-				param.Qualifier = Out
+				param.Qualifier = ast.Out
 			} else if p.sees('[') {
 				if err := p.eat('['); err != nil {
 					return nil, err
@@ -335,7 +337,7 @@ func (p *parser) parseFunctionDeclaration() (res *Function, rerr error) {
 				if err := p.eatWord("const"); err != nil {
 					return nil, err
 				}
-				param.Qualifier = RefConst
+				param.Qualifier = ast.RefConst
 			}
 
 			firstId, err := p.identifier("parameter name")
@@ -391,7 +393,7 @@ func (p *parser) parseFunctionDeclaration() (res *Function, rerr error) {
 	return f, nil
 }
 
-func (p *parser) parseVariableDeclaration() (*Variable, error) {
+func (p *parser) parseVariableDeclaration() (*ast.Variable, error) {
 	name, err := p.identifier("field name")
 	if err != nil {
 		return nil, err
@@ -406,7 +408,7 @@ func (p *parser) parseVariableDeclaration() (*Variable, error) {
 	if err := p.eat(';'); err != nil {
 		return nil, err
 	}
-	return &Variable{Name: name, Type: typ}, nil
+	return &ast.Variable{Name: name, Type: typ}, nil
 }
 
 func (p *parser) nextToken() token {
