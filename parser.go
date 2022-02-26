@@ -505,5 +505,5 @@ func (p *parser) identifier(description string) (string, error) {
 }
 
 func (p *parser) tokenError(t token, expected string) error {
-	return errors.New(expected + " expected but was " + t.String())
+	return errors.Errorf("%s expected but was %s", expected, t.String())
 }
