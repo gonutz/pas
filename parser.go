@@ -82,7 +82,10 @@ func (p *parser) parseUses() ([]string, error) {
 			return nil, err
 		}
 		uses = append(uses, unitName)
-		for p.seesAndEat(',') {
+		for p.sees(',') {
+			if err := p.eat(','); err != nil {
+				return nil, err
+			}
 			unitName, err := p.qualifiedIdentifier("uses clause")
 			if err != nil {
 				return nil, err
@@ -136,13 +139,19 @@ func (p *parser) parseTypeBlock() (FileSectionBlock, error) {
 		if err := p.eatWord("class"); err != nil {
 			return nil, err
 		}
-		if p.seesAndEat('(') {
+		if p.sees('(') {
+			if err := p.eat('('); err != nil {
+				return nil, err
+			}
 			className, err := p.qualifiedIdentifier("parent class name")
 			if err != nil {
 				return nil, err
 			}
 			class.SuperClasses = append(class.SuperClasses, className)
-			for p.seesAndEat(',') {
+			for p.sees(',') {
+				if err := p.eat(','); err != nil {
+					return nil, err
+				}
 				intf, err := p.qualifiedIdentifier("parent interface name")
 				if err != nil {
 					return nil, err
@@ -238,7 +247,10 @@ func (p *parser) parseFunctionDeclaration() (ClassMember, error) {
 	if err != nil {
 		return nil, err
 	}
-	if p.seesAndEat('(') {
+	if p.sees('(') {
+		if err := p.eat('('); err != nil {
+			return nil, err
+		}
 		for p.sees(tokenWord) || p.sees('[') {
 			var param Parameter
 
@@ -246,7 +258,10 @@ func (p *parser) parseFunctionDeclaration() (ClassMember, error) {
 				param.Qualifier = Var
 			} else if p.seesWordAndEat("const") {
 				param.Qualifier = Const
-				if p.seesAndEat('[') {
+				if p.sees('[') {
+					if err := p.eat('['); err != nil {
+						return nil, err
+					}
 					if err := p.eatWord("ref"); err != nil {
 						return nil, err
 					}
@@ -257,7 +272,10 @@ func (p *parser) parseFunctionDeclaration() (ClassMember, error) {
 				}
 			} else if p.seesWordAndEat("out") {
 				param.Qualifier = Out
-			} else if p.seesAndEat('[') {
+			} else if p.sees('[') {
+				if err := p.eat('['); err != nil {
+					return nil, err
+				}
 				if err := p.eatWord("ref"); err != nil {
 					return nil, err
 				}
@@ -275,14 +293,20 @@ func (p *parser) parseFunctionDeclaration() (ClassMember, error) {
 				return nil, err
 			}
 			param.Names = append(param.Names, firstId)
-			for p.seesAndEat(',') {
+			for p.sees(',') {
+				if err := p.eat(','); err != nil {
+					return nil, err
+				}
 				id, err := p.identifier("parameter name")
 				if err != nil {
 					return nil, err
 				}
 				param.Names = append(param.Names, id)
 			}
-			if p.seesAndEat(':') {
+			if p.sees(':') {
+				if err := p.eat(':'); err != nil {
+					return nil, err
+				}
 				pt, err := p.qualifiedIdentifier("parameter type")
 				if err != nil {
 					return nil, err
@@ -290,7 +314,10 @@ func (p *parser) parseFunctionDeclaration() (ClassMember, error) {
 				param.Type = pt
 			}
 			f.Parameters = append(f.Parameters, param)
-			if !p.seesAndEat(';') {
+			if !p.sees(';') {
+				if err := p.eat(','); err != nil {
+					return nil, err
+				}
 				break // The last parameter is not followed by a ';'.
 			}
 		}
@@ -298,7 +325,10 @@ func (p *parser) parseFunctionDeclaration() (ClassMember, error) {
 			return nil, err
 		}
 	}
-	if p.seesAndEat(':') {
+	if p.sees(':') {
+		if err := p.eat(':'); err != nil {
+			return nil, err
+		}
 		rt, err := p.qualifiedIdentifier("return type")
 		if err != nil {
 			return nil, err
@@ -360,15 +390,6 @@ func (p *parser) sees(typ tokenType) bool {
 	return t.tokenType == typ
 }
 
-func (p *parser) seesAndEat(typ tokenType) bool {
-	t := p.peekToken()
-	if t.tokenType == typ {
-		p.nextToken()
-		return true
-	}
-	return false
-}
-
 func (p *parser) seesWord(text string) bool {
 	t := p.peekToken()
 	return t.tokenType == tokenWord && strings.ToLower(t.text) == text
@@ -419,7 +440,11 @@ func (p *parser) qualifiedIdentifier(description string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	for p.seesAndEat('.') {
+	dot := tokenType('.')
+	for p.sees(dot) {
+		if err := p.eat(dot); err != nil {
+			return "", err
+		}
 		id, err := p.identifier(description)
 		if err != nil {
 			return "", err
