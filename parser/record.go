@@ -3,35 +3,40 @@ package parser
 import "github.com/akm/pas/ast"
 
 func recordProcessor(record *ast.Record) func(p *parser) error {
+	appendFunc := func(p *parser, word string) error {
+		if err := p.eatWord(word); err != nil {
+			return err
+		}
+		f, err := p.parseFunctionDeclaration()
+		if err != nil {
+			return err
+		}
+		record.AppendMember(f)
+		return nil
+	}
+
+	selector := &procSelector{
+		procs: []*namedProc{
+			{"procedure", appendFunc},
+			{"function", appendFunc},
+		},
+		defaultProc: func(p *parser) error {
+			v, err := p.parseVariableDeclaration()
+			if err != nil {
+				return err
+			}
+			record.AppendMember(v)
+			return nil
+		},
+	}
+
 	return func(p *parser) error {
 		if err := p.eatWord("record"); err != nil {
 			return err
 		}
 		for !p.seesWord("end") {
-			if p.seesWord("procedure") {
-				if err := p.eatWord("procedure"); err != nil {
-					return err
-				}
-				f, err := p.parseFunctionDeclaration()
-				if err != nil {
-					return err
-				}
-				record.AppendMember(f)
-			} else if p.seesWord("function") {
-				if err := p.eatWord("function"); err != nil {
-					return err
-				}
-				f, err := p.parseFunctionDeclaration()
-				if err != nil {
-					return err
-				}
-				record.AppendMember(f)
-			} else {
-				v, err := p.parseVariableDeclaration()
-				if err != nil {
-					return err
-				}
-				record.AppendMember(v)
+			if err := selector.Do(p); err != nil {
+				return err
 			}
 		}
 		if err := p.eatWord("end"); err != nil {
