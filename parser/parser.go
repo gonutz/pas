@@ -176,40 +176,7 @@ func (p *parser) parseClass(identifier string) (*ast.Class, error) {
 
 func (p *parser) parseRecord(identifier string) (*ast.Record, error) {
 	record := &ast.Record{Name: identifier}
-	if err := p.eatWord("record"); err != nil {
-		return nil, err
-	}
-	for !p.seesWord("end") {
-		if p.seesWord("procedure") {
-			if err := p.eatWord("procedure"); err != nil {
-				return nil, err
-			}
-			f, err := p.parseFunctionDeclaration()
-			if err != nil {
-				return nil, err
-			}
-			record.AppendMember(f)
-		} else if p.seesWord("function") {
-			if err := p.eatWord("function"); err != nil {
-				return nil, err
-			}
-			f, err := p.parseFunctionDeclaration()
-			if err != nil {
-				return nil, err
-			}
-			record.AppendMember(f)
-		} else {
-			v, err := p.parseVariableDeclaration()
-			if err != nil {
-				return nil, err
-			}
-			record.AppendMember(v)
-		}
-	}
-	if err := p.eatWord("end"); err != nil {
-		return nil, err
-	}
-	if err := p.eat(';'); err != nil {
+	if err := recordProcessor(record)(p); err != nil {
 		return nil, err
 	}
 	return record, nil
