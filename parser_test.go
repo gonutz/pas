@@ -4,8 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gonutz/check"
-	"github.com/gonutz/pas"
+	"github.com/akm/pas"
+	"github.com/akm/pas/ast"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParseEmptyUnit(t *testing.T) {
@@ -14,12 +15,12 @@ func TestParseEmptyUnit(t *testing.T) {
   interface
   implementation
   end.`,
-		&pas.File{
-			Kind: pas.Unit,
+		&ast.File{
+			Kind: ast.Unit,
 			Name: "U",
-			Sections: []pas.FileSection{
-				{Kind: pas.InterfaceSection},
-				{Kind: pas.ImplementationSection},
+			Sections: []*ast.FileSection{
+				{Kind: ast.InterfaceSection},
+				{Kind: ast.ImplementationSection},
 			},
 		})
 }
@@ -30,12 +31,12 @@ func TestUnitWithDotsInName(t *testing.T) {
   interface
   implementation
   end.`,
-		&pas.File{
-			Kind: pas.Unit,
+		&ast.File{
+			Kind: ast.Unit,
 			Name: "U.V.W",
-			Sections: []pas.FileSection{
-				{Kind: pas.InterfaceSection},
-				{Kind: pas.ImplementationSection},
+			Sections: []*ast.FileSection{
+				{Kind: ast.InterfaceSection},
+				{Kind: ast.ImplementationSection},
 			},
 		})
 }
@@ -48,12 +49,12 @@ func TestParseUses(t *testing.T) {
   implementation
   uses Windows . WinAPI;
   end.`,
-		&pas.File{
-			Kind: pas.Unit,
+		&ast.File{
+			Kind: ast.Unit,
 			Name: "U",
-			Sections: []pas.FileSection{
+			Sections: []*ast.FileSection{
 				{
-					Kind: pas.InterfaceSection,
+					Kind: ast.InterfaceSection,
 					Uses: []string{
 						"CustomUnit",
 						"System.Math",
@@ -61,7 +62,7 @@ func TestParseUses(t *testing.T) {
 					},
 				},
 				{
-					Kind: pas.ImplementationSection,
+					Kind: ast.ImplementationSection,
 					Uses: []string{
 						"Windows.WinAPI",
 					},
@@ -77,21 +78,21 @@ func TestParseEmptyClass(t *testing.T) {
   type C = class end;
   implementation
   end.`,
-		&pas.File{
-			Kind: pas.Unit,
+		&ast.File{
+			Kind: ast.Unit,
 			Name: "U",
-			Sections: []pas.FileSection{
+			Sections: []*ast.FileSection{
 				{
-					Kind: pas.InterfaceSection,
-					Blocks: []pas.FileSectionBlock{
-						pas.TypeBlock{
-							pas.Class{
+					Kind: ast.InterfaceSection,
+					Blocks: []ast.FileSectionBlock{
+						ast.TypeBlock{
+							&ast.Class{
 								Name: "C",
 							},
 						},
 					},
 				},
-				{Kind: pas.ImplementationSection},
+				{Kind: ast.ImplementationSection},
 			},
 		},
 	)
@@ -104,22 +105,22 @@ func TestParseInheritingClass(t *testing.T) {
   type G = class(A, B.C, D.E.F) end;
   implementation
   end.`,
-		&pas.File{
-			Kind: pas.Unit,
+		&ast.File{
+			Kind: ast.Unit,
 			Name: "U",
-			Sections: []pas.FileSection{
+			Sections: []*ast.FileSection{
 				{
-					Kind: pas.InterfaceSection,
-					Blocks: []pas.FileSectionBlock{
-						pas.TypeBlock{
-							pas.Class{
+					Kind: ast.InterfaceSection,
+					Blocks: []ast.FileSectionBlock{
+						ast.TypeBlock{
+							&ast.Class{
 								Name:         "G",
 								SuperClasses: []string{"A", "B.C", "D.E.F"},
 							},
 						},
 					},
 				},
-				{Kind: pas.ImplementationSection},
+				{Kind: ast.ImplementationSection},
 			},
 		},
 	)
@@ -135,27 +136,27 @@ func TestParseClassFields(t *testing.T) {
   end;
   implementation
   end.`,
-		&pas.File{
-			Kind: pas.Unit,
+		&ast.File{
+			Kind: ast.Unit,
 			Name: "U",
-			Sections: []pas.FileSection{
+			Sections: []*ast.FileSection{
 				{
-					Kind: pas.InterfaceSection,
-					Blocks: []pas.FileSectionBlock{
-						pas.TypeBlock{
-							pas.Class{
+					Kind: ast.InterfaceSection,
+					Blocks: []ast.FileSectionBlock{
+						ast.TypeBlock{
+							&ast.Class{
 								Name: "C",
-								Sections: []pas.ClassSection{
-									{Members: []pas.ClassMember{
-										pas.Variable{Name: "A", Type: "Integer"},
-										pas.Variable{Name: "B", Type: "C.D"},
+								Sections: []ast.ClassSection{
+									{Members: []ast.ClassMember{
+										&ast.Variable{Name: "A", Type: "Integer"},
+										&ast.Variable{Name: "B", Type: "C.D"},
 									}},
 								},
 							},
 						},
 					},
 				},
-				{Kind: pas.ImplementationSection},
+				{Kind: ast.ImplementationSection},
 			},
 		},
 	)
@@ -185,37 +186,37 @@ func TestParseClassFunctions(t *testing.T) {
   end;
   implementation
   end.`,
-		&pas.File{
-			Kind: pas.Unit,
+		&ast.File{
+			Kind: ast.Unit,
 			Name: "U",
-			Sections: []pas.FileSection{
+			Sections: []*ast.FileSection{
 				{
-					Kind: pas.InterfaceSection,
-					Blocks: []pas.FileSectionBlock{
-						pas.TypeBlock{
-							pas.Class{
-								Name: "C", Sections: []pas.ClassSection{
-									{Members: []pas.ClassMember{
-										pas.Function{Name: "A"},
-										pas.Function{Name: "B"},
-										pas.Function{Name: "C",
-											Parameters: []pas.Parameter{
+					Kind: ast.InterfaceSection,
+					Blocks: []ast.FileSectionBlock{
+						ast.TypeBlock{
+							&ast.Class{
+								Name: "C", Sections: []ast.ClassSection{
+									{Members: []ast.ClassMember{
+										&ast.Function{Name: "A"},
+										&ast.Function{Name: "B"},
+										&ast.Function{Name: "C",
+											Parameters: []*ast.Parameter{
 												{
 													Names: []string{"D"},
 													Type:  "Integer",
 												},
 											},
 										},
-										pas.Function{Name: "E",
-											Parameters: []pas.Parameter{
+										&ast.Function{Name: "E",
+											Parameters: []*ast.Parameter{
 												{
 													Names: []string{"F", "G"},
 													Type:  "Integer",
 												},
 											},
 										},
-										pas.Function{Name: "H",
-											Parameters: []pas.Parameter{
+										&ast.Function{Name: "H",
+											Parameters: []*ast.Parameter{
 												{
 													Names: []string{"I"},
 													Type:  "Integer",
@@ -226,26 +227,26 @@ func TestParseClassFunctions(t *testing.T) {
 												},
 											},
 										},
-										pas.Function{Name: "A", Returns: "Integer"},
-										pas.Function{Name: "B", Returns: "string"},
-										pas.Function{Name: "C", Returns: "Pointer",
-											Parameters: []pas.Parameter{
+										&ast.Function{Name: "A", Returns: "Integer"},
+										&ast.Function{Name: "B", Returns: "string"},
+										&ast.Function{Name: "C", Returns: "Pointer",
+											Parameters: []*ast.Parameter{
 												{
 													Names: []string{"D"},
 													Type:  "Integer",
 												},
 											},
 										},
-										pas.Function{Name: "E", Returns: "Cardinal",
-											Parameters: []pas.Parameter{
+										&ast.Function{Name: "E", Returns: "Cardinal",
+											Parameters: []*ast.Parameter{
 												{
 													Names: []string{"F", "G"},
 													Type:  "Integer",
 												},
 											},
 										},
-										pas.Function{Name: "H", Returns: "Vcl.TForm",
-											Parameters: []pas.Parameter{
+										&ast.Function{Name: "H", Returns: "Vcl.TForm",
+											Parameters: []*ast.Parameter{
 												{
 													Names: []string{"I"},
 													Type:  "Integer",
@@ -256,57 +257,57 @@ func TestParseClassFunctions(t *testing.T) {
 												},
 											},
 										},
-										pas.Function{Name: "P",
-											Parameters: []pas.Parameter{
+										&ast.Function{Name: "P",
+											Parameters: []*ast.Parameter{
 												{
 													Names:     []string{"I"},
 													Type:      "Integer",
-													Qualifier: pas.Var,
+													Qualifier: ast.Var,
 												},
 											},
 										},
-										pas.Function{Name: "P",
-											Parameters: []pas.Parameter{
+										&ast.Function{Name: "P",
+											Parameters: []*ast.Parameter{
 												{
 													Names:     []string{"I"},
 													Type:      "Integer",
-													Qualifier: pas.Const,
+													Qualifier: ast.Const,
 												},
 											},
 										},
-										pas.Function{Name: "P",
-											Parameters: []pas.Parameter{
+										&ast.Function{Name: "P",
+											Parameters: []*ast.Parameter{
 												{
 													Names:     []string{"I"},
 													Type:      "Integer",
-													Qualifier: pas.ConstRef,
+													Qualifier: ast.ConstRef,
 												},
 											},
 										},
-										pas.Function{Name: "P",
-											Parameters: []pas.Parameter{
+										&ast.Function{Name: "P",
+											Parameters: []*ast.Parameter{
 												{
 													Names:     []string{"I"},
 													Type:      "Integer",
-													Qualifier: pas.RefConst,
+													Qualifier: ast.RefConst,
 												},
 											},
 										},
-										pas.Function{Name: "P",
-											Parameters: []pas.Parameter{
+										&ast.Function{Name: "P",
+											Parameters: []*ast.Parameter{
 												{
 													Names:     []string{"I"},
 													Type:      "Integer",
-													Qualifier: pas.Out,
+													Qualifier: ast.Out,
 												},
 											},
 										},
-										pas.Function{Name: "NoType",
-											Parameters: []pas.Parameter{
+										&ast.Function{Name: "NoType",
+											Parameters: []*ast.Parameter{
 												{
 													Names:     []string{"P"},
 													Type:      "",
-													Qualifier: pas.Const,
+													Qualifier: ast.Const,
 												},
 											},
 										},
@@ -316,7 +317,7 @@ func TestParseClassFunctions(t *testing.T) {
 						},
 					},
 				},
-				{Kind: pas.ImplementationSection},
+				{Kind: ast.ImplementationSection},
 			},
 		},
 	)
@@ -339,44 +340,44 @@ func TestClassVisibilities(t *testing.T) {
   end;
   implementation
   end.`,
-		&pas.File{
-			Kind: pas.Unit,
+		&ast.File{
+			Kind: ast.Unit,
 			Name: "U",
-			Sections: []pas.FileSection{
+			Sections: []*ast.FileSection{
 				{
-					Kind: pas.InterfaceSection,
-					Blocks: []pas.FileSectionBlock{
-						pas.TypeBlock{
-							pas.Class{
-								Name: "C", Sections: []pas.ClassSection{
+					Kind: ast.InterfaceSection,
+					Blocks: []ast.FileSectionBlock{
+						ast.TypeBlock{
+							&ast.Class{
+								Name: "C", Sections: []ast.ClassSection{
 									{
-										Visibility: pas.DefaultPublished,
-										Members: []pas.ClassMember{
-											pas.Variable{Name: "A", Type: "Integer"},
+										Visibility: ast.DefaultPublished,
+										Members: []ast.ClassMember{
+											&ast.Variable{Name: "A", Type: "Integer"},
 										},
 									},
 									{
-										Visibility: pas.Public,
-										Members: []pas.ClassMember{
-											pas.Variable{Name: "B", Type: "Integer"},
+										Visibility: ast.Public,
+										Members: []ast.ClassMember{
+											&ast.Variable{Name: "B", Type: "Integer"},
 										},
 									},
 									{
-										Visibility: pas.Private,
-										Members: []pas.ClassMember{
-											pas.Variable{Name: "C", Type: "Integer"},
+										Visibility: ast.Private,
+										Members: []ast.ClassMember{
+											&ast.Variable{Name: "C", Type: "Integer"},
 										},
 									},
 									{
-										Visibility: pas.Protected,
-										Members: []pas.ClassMember{
-											pas.Variable{Name: "D", Type: "Integer"},
+										Visibility: ast.Protected,
+										Members: []ast.ClassMember{
+											&ast.Variable{Name: "D", Type: "Integer"},
 										},
 									},
 									{
-										Visibility: pas.Published,
-										Members: []pas.ClassMember{
-											pas.Variable{Name: "E", Type: "Integer"},
+										Visibility: ast.Published,
+										Members: []ast.ClassMember{
+											&ast.Variable{Name: "E", Type: "Integer"},
 										},
 									},
 								},
@@ -384,7 +385,7 @@ func TestClassVisibilities(t *testing.T) {
 						},
 					},
 				},
-				{Kind: pas.ImplementationSection},
+				{Kind: ast.ImplementationSection},
 			},
 		},
 	)
@@ -399,20 +400,20 @@ func TestParseVarBlock(t *testing.T) {
     S: string;
   implementation
   end.`,
-		&pas.File{
-			Kind: pas.Unit,
+		&ast.File{
+			Kind: ast.Unit,
 			Name: "U",
-			Sections: []pas.FileSection{
+			Sections: []*ast.FileSection{
 				{
-					Kind: pas.InterfaceSection,
-					Blocks: []pas.FileSectionBlock{
-						pas.VarBlock{
+					Kind: ast.InterfaceSection,
+					Blocks: []ast.FileSectionBlock{
+						ast.VarBlock{
 							{Name: "I", Type: "Integer"},
 							{Name: "S", Type: "string"},
 						},
 					},
 				},
-				{Kind: pas.ImplementationSection},
+				{Kind: ast.ImplementationSection},
 			},
 		},
 	)
@@ -426,18 +427,18 @@ func TestParseTwoVarBlocks(t *testing.T) {
   var S: string;
   implementation
   end.`,
-		&pas.File{
-			Kind: pas.Unit,
+		&ast.File{
+			Kind: ast.Unit,
 			Name: "U",
-			Sections: []pas.FileSection{
+			Sections: []*ast.FileSection{
 				{
-					Kind: pas.InterfaceSection,
-					Blocks: []pas.FileSectionBlock{
-						pas.VarBlock{{Name: "I", Type: "Integer"}},
-						pas.VarBlock{{Name: "S", Type: "string"}},
+					Kind: ast.InterfaceSection,
+					Blocks: []ast.FileSectionBlock{
+						ast.VarBlock{{Name: "I", Type: "Integer"}},
+						ast.VarBlock{{Name: "S", Type: "string"}},
 					},
 				},
-				{Kind: pas.ImplementationSection},
+				{Kind: ast.ImplementationSection},
 			},
 		},
 	)
@@ -453,22 +454,22 @@ func TestComments(t *testing.T) {
   implementation
   {$R *.dfm}
   end.`,
-		&pas.File{
-			Kind: pas.Unit,
+		&ast.File{
+			Kind: ast.Unit,
 			Name: "U",
-			Sections: []pas.FileSection{
-				{Kind: pas.InterfaceSection},
-				{Kind: pas.ImplementationSection},
+			Sections: []*ast.FileSection{
+				{Kind: ast.InterfaceSection},
+				{Kind: ast.ImplementationSection},
 			},
 		})
 }
 
-func parseFile(t *testing.T, code string, want *pas.File) {
+func parseFile(t *testing.T, code string, want *ast.File) {
 	t.Helper()
 	code = strings.Replace(code, "\n", "\r\n", -1)
 	f, err := pas.ParseString(code)
 	if err != nil {
 		t.Fatal(err)
 	}
-	check.Eq(t, f, want)
+	assert.Equal(t, want, f)
 }

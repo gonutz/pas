@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gonutz/check"
-	"github.com/gonutz/pas"
+	"github.com/akm/pas"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestUnitMustHaveInterfaceAndImplementationSections(t *testing.T) {
@@ -103,7 +103,7 @@ func TestIncompleteTypeBlock(t *testing.T) {
 	)
 	parseError(t,
 		"unit U;interface type C=A,B) end; implementation end.",
-		`keyword "class" expected but was word "A" at 1:25`,
+		`keyword "record" expected but was word "A" at 1:25`,
 	)
 	parseError(t,
 		"unit U;interface type C class(A,B) end; implementation end.",
@@ -163,5 +163,5 @@ func parseError(t *testing.T, code, wantMessage string) {
 	if err == nil {
 		t.Fatal("error expected")
 	}
-	check.Eq(t, err.Error(), wantMessage)
+	assert.Equal(t, wantMessage, err.Error())
 }
