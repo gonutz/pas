@@ -100,19 +100,27 @@ func (p *parser) parseSeparatedString(separator tokenType, identifierDesc string
 	return res, nil
 }
 
+func (p *parser) startWordEndToken(start string, tt tokenType, fn func() error) error {
+	if err := p.eatWord(start); err != nil {
+		return err
+	}
+	if err := fn(); err != nil {
+		return err
+	}
+	if err := p.eat(tt); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (p *parser) parseUses() ([]string, error) {
 	if p.seesWord("uses") {
-		if err := p.eatWord("uses"); err != nil {
-			return nil, err
-		}
-		uses, err := p.parseSeparatedString(',', "uses clause")
-		if err != nil {
-			return nil, err
-		}
-		if err := p.eat(';'); err != nil {
-			return nil, err
-		}
-		return uses, nil
+		var uses []string
+		err := p.startWordEndToken("uses", ';', func() (err error) {
+			uses, err = p.parseSeparatedString(',', "uses clause")
+			return
+		})
+		return uses, err
 	} else {
 		return nil, nil
 	}
