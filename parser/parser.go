@@ -293,21 +293,12 @@ func (p *parser) parseParameters(endToken tokenType) (ast.Parameters, error) {
 			param.Qualifier = ast.RefConst
 		}
 
-		firstId, err := p.identifier("parameter name")
+		names, err := p.parseSeparatedString(',', "parameter name")
 		if err != nil {
 			return nil, err
 		}
-		param.Names = append(param.Names, firstId)
-		for p.sees(',') {
-			if err := p.eat(','); err != nil {
-				return nil, err
-			}
-			id, err := p.identifier("parameter name")
-			if err != nil {
-				return nil, err
-			}
-			param.Names = append(param.Names, id)
-		}
+		param.Names = names
+
 		if p.sees(':') {
 			if err := p.eat(':'); err != nil {
 				return nil, err
