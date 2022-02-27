@@ -9,17 +9,19 @@ type Class struct {
 	ClassExpr
 }
 
-func NewClass(name string, superClasses ...string) *Class {
-	return &Class{
-		Name: name,
-		ClassExpr: ClassExpr{
-			SuperClasses: superClasses,
-		},
+func NewClass(name string, funcs ...func(*ClassExpr)) *Class {
+	c := &Class{Name: name}
+	for _, f := range funcs {
+		f(&c.ClassExpr)
 	}
-}
-func (c *Class) WithSection(sections ...ClassSection) *Class {
-	c.Sections = sections
 	return c
+}
+
+func NewClassWithSuperClasses(name string, superClasses []string, funcs ...func(*ClassExpr)) *Class {
+	funcs = append(funcs, func(c *ClassExpr) {
+		c.SuperClasses = superClasses
+	})
+	return NewClass(name, funcs...)
 }
 
 type ClassExpr struct {
