@@ -72,9 +72,6 @@ func arrayProc(array *ast.ArrayExpr) func(p *parser) error {
 			return err
 		}
 		array.Type = typ
-		if err := p.eat(';'); err != nil {
-			return err
-		}
 		return nil
 	}
 }

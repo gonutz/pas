@@ -210,6 +210,9 @@ func (p *parser) parseTypeBlock() (ast.TypeBlock, error) {
 			if err := arrayProc(arrayExpr)(p); err != nil {
 				return nil, err
 			}
+			if err := p.eat(';'); err != nil {
+				return nil, err
+			}
 			array := &ast.Array{Name: identifier, ArrayExpr: *arrayExpr}
 			res = append(res, array)
 		} else {
