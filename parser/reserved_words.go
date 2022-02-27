@@ -1,6 +1,6 @@
 package parser
 
-import "github.com/akm/pas/ext"
+import "github.com/akm/delparser/ext"
 
 // https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Fundamental_Syntactic_Elements_(Delphi)#Reserved_Words
 var reservedWords = (ext.Strings{

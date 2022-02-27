@@ -3,7 +3,7 @@ package parser
 import (
 	"testing"
 
-	"github.com/akm/pas/ast"
+	"github.com/akm/delparser/ast"
 )
 
 func Test2RecordsInATypeBlock(t *testing.T) {

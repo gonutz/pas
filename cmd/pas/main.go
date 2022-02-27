@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/akm/pas"
+	"github.com/akm/delparser"
 )
 
 func main() {
@@ -28,7 +28,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	unit, err := pas.ParseString(string(b))
+	unit, err := delparser.ParseString(string(b))
 	if err != nil {
 		fmt.Printf("Error parsing file: %+v\n", err)
 		os.Exit(1)

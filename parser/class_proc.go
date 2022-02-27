@@ -1,6 +1,6 @@
 package parser
 
-import "github.com/akm/pas/ast"
+import "github.com/akm/delparser/ast"
 
 func classProc(class *ast.Class) func(p *parser) error {
 	newSection := func(visibility ast.Visibility) func(p *parser) error {

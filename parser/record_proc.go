@@ -1,6 +1,6 @@
 package parser
 
-import "github.com/akm/pas/ast"
+import "github.com/akm/delparser/ast"
 
 func recordProc(record *ast.Record) func(p *parser) error {
 	appendFunc := func(p *parser) error {

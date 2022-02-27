@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"github.com/akm/pas/ast"
+	"github.com/akm/delparser/ast"
 )
 
 func ParseString(code string) (*ast.File, error) {

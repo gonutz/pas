@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/akm/pas/ast"
+	"github.com/akm/delparser/ast"
 )
 
 // https://docwiki.embarcadero.com/RADStudio/Alexandria/ja/%E3%83%91%E3%83%A9%E3%83%A1%E3%83%BC%E3%82%BF%EF%BC%88Delphi%EF%BC%89
