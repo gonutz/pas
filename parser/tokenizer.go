@@ -22,6 +22,9 @@ type tokenizer struct {
 func isDigit(r rune) bool {
 	return '0' <= r && r <= '9'
 }
+func isDigitFirst(r rune) bool {
+	return isDigit(r) || r == '-' // || r == '+' // Don't allow + for now
+}
 
 func (t *tokenizer) next() token {
 	haveType := tokenIllegal
@@ -71,7 +74,7 @@ func (t *tokenizer) next() token {
 			for word(t.nextRune()) {
 			}
 			haveType = tokenWord
-		} else if isDigit(r) {
+		} else if isDigitFirst(r) {
 			hasDot := false
 			for {
 				r := t.nextRune()

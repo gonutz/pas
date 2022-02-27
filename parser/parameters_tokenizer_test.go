@@ -15,4 +15,9 @@ func TestFloatValue(t *testing.T) {
 		tok(tokenWord, "3.5"),
 		tok(tokenEOF, ""),
 	)
+	checkTokens(t,
+		`-3.5`,
+		tok(tokenWord, "-3.5"),
+		tok(tokenEOF, ""),
+	)
 }
