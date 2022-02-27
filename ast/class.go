@@ -91,9 +91,11 @@ func (*Property) isClassMember() {}
 
 type Property struct {
 	Variable
-	Indexes   []*Parameter
+	Class     bool
+	Indexes   Parameters
+	Index     int
 	Reader    string
-	Getter    string
+	Writer    string
 	Stored    string
 	Default   string
 	Nodefault bool
