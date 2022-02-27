@@ -24,6 +24,9 @@ func NewClassWithSuperClasses(name string, superClasses []string, funcs ...func(
 	return NewClass(name, funcs...)
 }
 
+func (*ClassExpr) isVarType()  {}
+func (*ClassExpr) isTypeExpr() {}
+
 type ClassExpr struct {
 	SuperClasses []string
 	Sections     []ClassSection

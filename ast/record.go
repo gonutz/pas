@@ -16,6 +16,9 @@ func NewRecord(name string, members ...RecordMember) *Record {
 	}
 }
 
+func (*RecordExpr) isVarType()  {}
+func (*RecordExpr) isTypeExpr() {}
+
 type RecordExpr struct {
 	Members []RecordMember
 }

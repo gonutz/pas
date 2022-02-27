@@ -18,7 +18,8 @@ func NewArray(name, typ string, indexTypes []IndexType) *Array {
 	}
 }
 
-func (*ArrayExpr) isVarType() {}
+func (*ArrayExpr) isVarType()  {}
+func (*ArrayExpr) isTypeExpr() {}
 
 type ArrayExpr struct {
 	Dynamic    bool
