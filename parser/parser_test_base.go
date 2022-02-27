@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/akm/pas/ast"
+	"github.com/akm/delparser/ast"
 	"github.com/stretchr/testify/assert"
 )
 

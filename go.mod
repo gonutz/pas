@@ -1,4 +1,4 @@
-module github.com/akm/pas
+module github.com/akm/delparser
 
 go 1.16
 

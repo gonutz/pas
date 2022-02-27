@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/akm/pas/ast"
+	"github.com/akm/delparser/ast"
 )
 
 func TestParseEmptyUnit(t *testing.T) {

@@ -1,6 +1,6 @@
 package parser
 
-import "github.com/akm/pas/ast"
+import "github.com/akm/delparser/ast"
 
 func functionProc(f *ast.Function) func(*parser) error {
 	return func(p *parser) error {

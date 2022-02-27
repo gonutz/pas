@@ -1,8 +1,8 @@
-package pas
+package delparser
 
 import (
-	"github.com/akm/pas/ast"
-	"github.com/akm/pas/parser"
+	"github.com/akm/delparser/ast"
+	"github.com/akm/delparser/parser"
 )
 
 func ParseString(code string) (*ast.File, error) {

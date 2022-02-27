@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/akm/pas/ast"
+	"github.com/akm/delparser/ast"
 	"github.com/pkg/errors"
 )
 
