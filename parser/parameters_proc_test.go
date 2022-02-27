@@ -29,8 +29,8 @@ func TestParameters(t *testing.T) {
   procedure Sort(A: TDigits);
   function Find(A: array of Char): Integer; // Open Array Parameters
   function MakeStr(const Args: array of const): string; // Variant Open Array Parameters
-//    procedure FillArray(A: array of Integer; Value: Integer = 0);
-//   function MyFunction(X: Real = 3.5; Y: Real = 3.5): Real;
+  procedure FillArray(A: array of Integer; Value: Integer = 0);
+  function MyFunction(X: Real = 3.5; Y: Real = 3.5): Real;
   implementation
   end.`,
 		&ast.File{
@@ -91,6 +91,14 @@ func TestParameters(t *testing.T) {
 						}},
 						&ast.Function{Name: "MakeStr", Returns: "string", Parameters: ast.Parameters{
 							{Names: []string{"Args"}, Type: "const", OpenArray: true, Qualifier: ast.Const},
+						}},
+						&ast.Function{Name: "FillArray", Parameters: ast.Parameters{
+							{Names: []string{"A"}, Type: "Integer", OpenArray: true},
+							{Names: []string{"Value"}, Type: "Integer", DefaultValue: "0"},
+						}},
+						&ast.Function{Name: "MyFunction", Returns: "Real", Parameters: ast.Parameters{
+							{Names: []string{"X"}, Type: "Real", DefaultValue: "3.5"},
+							{Names: []string{"Y"}, Type: "Real", DefaultValue: "3.5"},
 						}},
 					},
 				},
