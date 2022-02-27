@@ -223,30 +223,7 @@ func (p *parser) parseFunctionDeclaration() (res *ast.Function, rerr error) {
 		return nil, err
 	}
 	f := &ast.Function{Name: name}
-	if p.sees('(') {
-		err := p.startEndToken('(', ')', func() (err error) {
-			parameters, err := p.parseParameters(')')
-			if err != nil {
-				return err
-			}
-			f.Parameters = parameters
-			return nil
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
-	if p.sees(':') {
-		if err := p.eat(':'); err != nil {
-			return nil, err
-		}
-		rt, err := p.qualifiedIdentifier("return type")
-		if err != nil {
-			return nil, err
-		}
-		f.Returns = rt
-	}
-	if err := p.eat(';'); err != nil {
+	if err := functionProcessor(f)(p); err != nil {
 		return nil, err
 	}
 	return f, nil
