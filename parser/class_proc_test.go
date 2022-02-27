@@ -325,3 +325,67 @@ func TestClassVisibilities(t *testing.T) {
 		},
 	)
 }
+
+// https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Properties_(Delphi)
+func TestParseClassProperties(t *testing.T) {
+	parseFile(t, `
+  unit U;
+  interface
+  type C = class
+  property Color: TColor read GetColor write SetColor;
+  property Objects[Index: Integer]: TObject read GetObject write SetObject;
+  property Pixels[X, Y: Integer]: TColor read GetPixel write SetPixel;
+  property Values[const Name: string]: string read GetValue write SetValue;
+  property Left:   Longint index 0 read GetCoordinate write SetCoordinate;
+  property Top:    Longint index 1 read GetCoordinate write SetCoordinate;
+  property Right:  Longint index 2 read GetCoordinate write SetCoordinate;
+  property Bottom: Longint index 3 read GetCoordinate write SetCoordinate;
+  property Coordinates[Index: Integer]: Longint read GetCoordinate write SetCoordinate;
+  property Name: TComponentName read FName write SetName stored False;
+  property Tag: Longint read FTag write FTag default 0;
+  class property Red: Integer read FRed write FRed;
+  end;
+  implementation
+  end.`,
+		&ast.File{
+			Kind: ast.Unit,
+			Name: "U",
+			Sections: []*ast.FileSection{
+				{
+					Kind: ast.InterfaceSection,
+					Blocks: []ast.FileSectionBlock{
+						ast.TypeBlock{
+							&ast.Class{
+								Name: "C", Sections: []ast.ClassSection{
+									{Members: []ast.ClassMember{
+										&ast.Property{Variable: ast.Variable{Name: "Color", Type: "TColor"}, Reader: "GetColor", Writer: "SetColor"},
+										&ast.Property{Variable: ast.Variable{Name: "Objects", Type: "TObject"}, Reader: "GetObject", Writer: "SetObject", Indexes: []*ast.Parameter{
+											{Names: []string{"Index"}, Type: "Integer"},
+										}},
+										&ast.Property{Variable: ast.Variable{Name: "Pixels", Type: "TColor"}, Reader: "GetPixel", Writer: "SetPixel", Indexes: []*ast.Parameter{
+											{Names: []string{"X", "Y"}, Type: "Integer"},
+										}},
+										&ast.Property{Variable: ast.Variable{Name: "Values", Type: "string"}, Reader: "GetValue", Writer: "SetValue", Indexes: []*ast.Parameter{
+											{Names: []string{"Name"}, Type: "string", Qualifier: ast.Const},
+										}},
+										&ast.Property{Variable: ast.Variable{Name: "Left", Type: "Longint"}, Reader: "GetCoordinate", Writer: "SetCoordinate", Index: 0},
+										&ast.Property{Variable: ast.Variable{Name: "Top", Type: "Longint"}, Reader: "GetCoordinate", Writer: "SetCoordinate", Index: 1},
+										&ast.Property{Variable: ast.Variable{Name: "Right", Type: "Longint"}, Reader: "GetCoordinate", Writer: "SetCoordinate", Index: 2},
+										&ast.Property{Variable: ast.Variable{Name: "Bottom", Type: "Longint"}, Reader: "GetCoordinate", Writer: "SetCoordinate", Index: 3},
+										&ast.Property{Variable: ast.Variable{Name: "Coordinates", Type: "Longint"}, Reader: "GetCoordinate", Writer: "SetCoordinate", Indexes: []*ast.Parameter{
+											{Names: []string{"Index"}, Type: "Integer"},
+										}},
+										&ast.Property{Variable: ast.Variable{Name: "Name", Type: "TComponentName"}, Reader: "FName", Writer: "SetName", Stored: "False"},
+										&ast.Property{Variable: ast.Variable{Name: "Tag", Type: "Longint"}, Reader: "FTag", Writer: "FTag", Default: "0"},
+										&ast.Property{Variable: ast.Variable{Name: "Red", Type: "Integer"}, Reader: "FRed", Writer: "FRed", Class: true},
+									}},
+								},
+							},
+						},
+					},
+				},
+				{Kind: ast.ImplementationSection},
+			},
+		},
+	)
+}
