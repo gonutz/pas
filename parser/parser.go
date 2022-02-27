@@ -332,12 +332,6 @@ func (p *parser) seesReservedWord() bool {
 	return t.tokenType == tokenWord && isReservedWord(strings.ToLower(t.text))
 }
 
-// https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Fundamental_Syntactic_Elements_(Delphi)#Reserved_Words
-func isReservedWord(s string) bool {
-	// TODO Complete the list of keywords, these end blocks (var, type, ...).
-	return s == "implementation" || s == "var"
-}
-
 func (p *parser) eat(typ tokenType) error {
 	t := p.nextToken()
 	if t.tokenType != typ {
