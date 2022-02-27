@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/akm/pas/ast"
@@ -68,57 +69,58 @@ func TestParseUses(t *testing.T) {
 		})
 }
 
-func TestParseVarBlock(t *testing.T) {
-	parseFile(t, `
-  unit U;
-  interface
-  VAR
-    I: Integer;
-    S: string;
-  implementation
-  end.`,
-		&ast.File{
-			Kind: ast.Unit,
-			Name: "U",
-			Sections: []*ast.FileSection{
-				{
-					Kind: ast.InterfaceSection,
-					Blocks: []ast.FileSectionBlock{
-						ast.VarBlock{
-							{Name: "I", Type: "Integer"},
-							{Name: "S", Type: "string"},
-						},
-					},
-				},
-				{Kind: ast.ImplementationSection},
-			},
-		},
-	)
-}
+func TestInterfaceSection(t *testing.T) {
+	type pattern struct {
+		name   string
+		code   string
+		blocks []ast.FileSectionBlock
+	}
 
-func TestParseTwoVarBlocks(t *testing.T) {
-	parseFile(t, `
-  unit U;
-  interface
-  var I: Integer;
-  var S: string;
-  implementation
-  end.`,
-		&ast.File{
-			Kind: ast.Unit,
-			Name: "U",
-			Sections: []*ast.FileSection{
-				{
-					Kind: ast.InterfaceSection,
-					Blocks: []ast.FileSectionBlock{
-						ast.VarBlock{{Name: "I", Type: "Integer"}},
-						ast.VarBlock{{Name: "S", Type: "string"}},
-					},
+	patterns := []pattern{
+		{
+			"2 declarations in a var block",
+			`VAR
+			I: Integer;
+			S: string;`,
+			[]ast.FileSectionBlock{
+				ast.VarBlock{
+					{Name: "I", Type: "Integer"},
+					{Name: "S", Type: "string"},
 				},
-				{Kind: ast.ImplementationSection},
 			},
 		},
-	)
+		{
+			"2 var blocks",
+			`var I: Integer;
+			var S: string;`,
+			[]ast.FileSectionBlock{
+				ast.VarBlock{{Name: "I", Type: "Integer"}},
+				ast.VarBlock{{Name: "S", Type: "string"}},
+			},
+		},
+	}
+
+	unitTemplate := `unit U;
+	interface
+	%s
+	implementation
+	end.`
+
+	for _, ptn := range patterns {
+		t.Run(ptn.name, func(t *testing.T) {
+			parseFile(t, fmt.Sprintf(unitTemplate, ptn.code), &ast.File{
+				Kind: ast.Unit,
+				Name: "U",
+				Sections: []*ast.FileSection{
+					{
+						Kind:   ast.InterfaceSection,
+						Blocks: ptn.blocks,
+					},
+					{Kind: ast.ImplementationSection},
+				},
+			})
+		})
+	}
 }
 
 func TestComments(t *testing.T) {
