@@ -213,7 +213,7 @@ func (p *parser) parseTypeBlock() (ast.TypeBlock, error) {
 		} else {
 			return nil, errors.Errorf("expected type declaration, got %+v", p.peekToken())
 		}
-		if p.seesWords("var", "type", "const", "implementation") {
+		if p.sees(tokenWord) && p.seesReservedWord() {
 			break
 		}
 	}
