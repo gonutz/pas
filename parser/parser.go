@@ -203,35 +203,43 @@ func (p *parser) parseTypeBlock() (ast.TypeBlock, error) {
 		if err := p.eat('='); err != nil {
 			return nil, err
 		}
-		if p.seesWord("class") {
-			expr := &ast.ClassExpr{}
-			if err := classProc(expr)(p); err != nil {
-				return nil, err
-			}
-			res = append(res, &ast.Type{Name: identifier, Type: expr})
-		} else if p.seesWord("record") {
-			expr := &ast.RecordExpr{}
-			if err := recordProc(expr)(p); err != nil {
-				return nil, err
-			}
-			res = append(res, &ast.Type{Name: identifier, Type: expr})
-		} else if p.seesWords("packed", "array") {
-			expr := &ast.ArrayExpr{}
-			if err := arrayProc(expr)(p); err != nil {
-				return nil, err
-			}
-			if err := p.eat(';'); err != nil {
-				return nil, err
-			}
-			res = append(res, &ast.Type{Name: identifier, Type: expr})
-		} else {
-			return nil, errors.Errorf("expected type declaration, got %+v", p.peekToken())
+		expr, err := p.parseTypeExpr()
+		if err != nil {
+			return nil, err
 		}
+		res = append(res, &ast.Type{Name: identifier, Type: expr})
 		if p.sees(tokenWord) && p.seesReservedWord() {
 			break
 		}
 	}
 	return res, nil
+}
+
+func (p *parser) parseTypeExpr() (ast.TypeExpr, error) {
+	if p.seesWord("class") {
+		expr := &ast.ClassExpr{}
+		if err := classProc(expr)(p); err != nil {
+			return nil, err
+		}
+		return expr, nil
+	} else if p.seesWord("record") {
+		expr := &ast.RecordExpr{}
+		if err := recordProc(expr)(p); err != nil {
+			return nil, err
+		}
+		return expr, nil
+	} else if p.seesWords("packed", "array") {
+		expr := &ast.ArrayExpr{}
+		if err := arrayProc(expr)(p); err != nil {
+			return nil, err
+		}
+		if err := p.eat(';'); err != nil {
+			return nil, err
+		}
+		return expr, nil
+	} else {
+		return nil, errors.Errorf("expected type expression, got %+v", p.peekToken())
+	}
 }
 
 func (p *parser) parseVarBlock(word string) (ast.VarBlock, error) {
