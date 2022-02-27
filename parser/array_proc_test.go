@@ -40,20 +40,12 @@ func Test2StaticArray(t *testing.T) {
 					Kind: ast.InterfaceSection,
 					Blocks: []ast.FileSectionBlock{
 						ast.TypeBlock{
-							&ast.Array{
-								Name:       "TNumbers",
-								Type:       "Real",
-								IndexTypes: []ast.IndexType{&ast.NumRange{Packed: true, Low: 1, High: 100}},
-							},
-							&ast.Array{
-								Name:       "TMyArray",
-								Type:       "Char",
-								IndexTypes: []ast.IndexType{&ast.NumRange{Low: 1, High: 100}},
-							},
-							&ast.Array{Name: "TMatrix1", Type: "Real", IndexTypes: matrixIndexTypes},
-							&ast.Array{Name: "TMatrix2", Type: "Real", IndexTypes: matrixIndexTypes},
-							&ast.Array{Name: "TMyPackedArray1", Type: "Integer", IndexTypes: packedMatrixIndexTypes},
-							&ast.Array{Name: "TMyPackedArray2", Type: "Integer", IndexTypes: packedMatrixIndexTypes},
+							ast.NewArray("TNumbers", "Real", []ast.IndexType{&ast.NumRange{Packed: true, Low: 1, High: 100}}),
+							ast.NewArray("TMyArray", "Char", []ast.IndexType{&ast.NumRange{Low: 1, High: 100}}),
+							ast.NewArray("TMatrix1", "Real", matrixIndexTypes),
+							ast.NewArray("TMatrix2", "Real", matrixIndexTypes),
+							ast.NewArray("TMyPackedArray1", "Integer", packedMatrixIndexTypes),
+							ast.NewArray("TMyPackedArray2", "Integer", packedMatrixIndexTypes),
 						},
 					},
 				},
