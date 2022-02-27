@@ -269,28 +269,36 @@ func (p *parser) parseVariableDeclaration() (*ast.Variable, error) {
 	if err := p.eat(':'); err != nil {
 		return nil, err
 	}
-	typ, err := p.qualifiedIdentifier("type name")
-	if err != nil {
-		return nil, err
-	}
-	if p.sees('[') {
-		err := p.startEndToken('[', ']', func() error {
-			token := p.nextToken()
-			if token.tokenType != tokenInt {
-				return errors.Errorf("expected int, got %+v", token)
-			}
-			l, err := strconv.Atoi(token.text)
-			if err != nil {
-				return err
-			}
-			r.Length = l
-			return nil
-		})
+	if p.seesWords("packed", "array") {
+		arrayExpr := &ast.ArrayExpr{}
+		if err := arrayProc(arrayExpr)(p); err != nil {
+			return nil, err
+		}
+		r.Type = arrayExpr
+	} else {
+		typ, err := p.qualifiedIdentifier("type name")
 		if err != nil {
 			return nil, err
 		}
+		if p.sees('[') {
+			err := p.startEndToken('[', ']', func() error {
+				token := p.nextToken()
+				if token.tokenType != tokenInt {
+					return errors.Errorf("expected int, got %+v", token)
+				}
+				l, err := strconv.Atoi(token.text)
+				if err != nil {
+					return err
+				}
+				r.Length = l
+				return nil
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
+		r.Type = ast.TypeName(typ)
 	}
-	r.Type = ast.TypeName(typ)
 	if p.seesWord("absolute") {
 		if err := p.eatWord("absolute"); err != nil {
 			return nil, err

@@ -57,7 +57,10 @@ func TestVar(t *testing.T) {
 		{
 			"var Checks: Array [1..3] of Boolean;",
 			[]ast.FileSectionBlock{ast.VarBlock{
-				ast.NewVariable("Checks", "Array [1..3] of Boolean"),
+				&ast.Variable{Names: []string{"Checks"}, Type: &ast.ArrayExpr{
+					IndexTypes: []ast.IndexType{&ast.NumRange{Low: 1, High: 3}},
+					Type:       "Boolean",
+				}},
 			}},
 		},
 		{
