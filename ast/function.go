@@ -15,8 +15,10 @@ type Parameter struct {
 	// Type might be empty. In that case this is an untyped parameter like in:
 	//
 	//     procedure(const A; var B);
-	Type      string
-	Qualifier Qualifier
+	Type         string
+	Qualifier    Qualifier
+	OpenArray    bool
+	DefaultValue string
 }
 
 type Qualifier int
