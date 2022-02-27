@@ -5,7 +5,24 @@ package ast
 func (*Class) isTypeDeclaration() {}
 
 type Class struct {
-	Name         string
+	Name string
+	ClassExpr
+}
+
+func NewClass(name string, superClasses ...string) *Class {
+	return &Class{
+		Name: name,
+		ClassExpr: ClassExpr{
+			SuperClasses: superClasses,
+		},
+	}
+}
+func (c *Class) WithSection(sections ...ClassSection) *Class {
+	c.Sections = sections
+	return c
+}
+
+type ClassExpr struct {
 	SuperClasses []string
 	Sections     []ClassSection
 	Abstract     bool

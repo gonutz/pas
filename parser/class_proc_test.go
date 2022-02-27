@@ -50,10 +50,7 @@ func TestParseInheritingClass(t *testing.T) {
 					Kind: ast.InterfaceSection,
 					Blocks: []ast.FileSectionBlock{
 						ast.TypeBlock{
-							&ast.Class{
-								Name:         "G",
-								SuperClasses: []string{"A", "B.C", "D.E.F"},
-							},
+							ast.NewClass("G", "A", "B.C", "D.E.F"),
 						},
 					},
 				},
@@ -81,15 +78,12 @@ func TestParseClassFields(t *testing.T) {
 					Kind: ast.InterfaceSection,
 					Blocks: []ast.FileSectionBlock{
 						ast.TypeBlock{
-							&ast.Class{
-								Name: "C",
-								Sections: []ast.ClassSection{
-									{Members: []ast.ClassMember{
-										&ast.Field{Variable: *ast.NewVariable("A", "Integer")},
-										&ast.Field{Variable: *ast.NewVariable("B", "C.D")},
-									}},
+							ast.NewClass("C").WithSection(ast.ClassSection{
+								Members: []ast.ClassMember{
+									&ast.Field{Variable: *ast.NewVariable("A", "Integer")},
+									&ast.Field{Variable: *ast.NewVariable("B", "C.D")},
 								},
-							},
+							}),
 						},
 					},
 				},
@@ -131,126 +125,124 @@ func TestParseClassFunctions(t *testing.T) {
 					Kind: ast.InterfaceSection,
 					Blocks: []ast.FileSectionBlock{
 						ast.TypeBlock{
-							&ast.Class{
-								Name: "C", Sections: []ast.ClassSection{
-									{Members: []ast.ClassMember{
-										&ast.Method{Function: ast.Function{Name: "A"}},
-										&ast.Method{Function: ast.Function{Name: "B", Parameters: ast.Parameters{}}},
-										&ast.Method{Function: ast.Function{Name: "C",
-											Parameters: ast.Parameters{
-												{
-													Names: []string{"D"},
-													Type:  "Integer",
-												},
+							ast.NewClass("C").WithSection(ast.ClassSection{
+								Members: []ast.ClassMember{
+									&ast.Method{Function: ast.Function{Name: "A"}},
+									&ast.Method{Function: ast.Function{Name: "B", Parameters: ast.Parameters{}}},
+									&ast.Method{Function: ast.Function{Name: "C",
+										Parameters: ast.Parameters{
+											{
+												Names: []string{"D"},
+												Type:  "Integer",
 											},
-										}},
-										&ast.Method{Function: ast.Function{Name: "E",
-											Parameters: ast.Parameters{
-												{
-													Names: []string{"F", "G"},
-													Type:  "Integer",
-												},
+										},
+									}},
+									&ast.Method{Function: ast.Function{Name: "E",
+										Parameters: ast.Parameters{
+											{
+												Names: []string{"F", "G"},
+												Type:  "Integer",
 											},
-										}},
-										&ast.Method{Function: ast.Function{Name: "H",
-											Parameters: ast.Parameters{
-												{
-													Names: []string{"I"},
-													Type:  "Integer",
-												},
-												{
-													Names: []string{"J"},
-													Type:  "string",
-												},
+										},
+									}},
+									&ast.Method{Function: ast.Function{Name: "H",
+										Parameters: ast.Parameters{
+											{
+												Names: []string{"I"},
+												Type:  "Integer",
 											},
-										}},
-										&ast.Method{Function: ast.Function{Name: "A", Returns: "Integer"}},
-										&ast.Method{Function: ast.Function{Name: "B", Returns: "string", Parameters: ast.Parameters{}}},
-										&ast.Method{Function: ast.Function{Name: "C", Returns: "Pointer",
-											Parameters: ast.Parameters{
-												{
-													Names: []string{"D"},
-													Type:  "Integer",
-												},
+											{
+												Names: []string{"J"},
+												Type:  "string",
 											},
-										}},
-										&ast.Method{Function: ast.Function{Name: "E", Returns: "Cardinal",
-											Parameters: ast.Parameters{
-												{
-													Names: []string{"F", "G"},
-													Type:  "Integer",
-												},
+										},
+									}},
+									&ast.Method{Function: ast.Function{Name: "A", Returns: "Integer"}},
+									&ast.Method{Function: ast.Function{Name: "B", Returns: "string", Parameters: ast.Parameters{}}},
+									&ast.Method{Function: ast.Function{Name: "C", Returns: "Pointer",
+										Parameters: ast.Parameters{
+											{
+												Names: []string{"D"},
+												Type:  "Integer",
 											},
-										}},
-										&ast.Method{Function: ast.Function{Name: "H", Returns: "Vcl.TForm",
-											Parameters: ast.Parameters{
-												{
-													Names: []string{"I"},
-													Type:  "Integer",
-												},
-												{
-													Names: []string{"J"},
-													Type:  "K.L",
-												},
+										},
+									}},
+									&ast.Method{Function: ast.Function{Name: "E", Returns: "Cardinal",
+										Parameters: ast.Parameters{
+											{
+												Names: []string{"F", "G"},
+												Type:  "Integer",
 											},
-										}},
-										&ast.Method{Function: ast.Function{Name: "P",
-											Parameters: ast.Parameters{
-												{
-													Names:     []string{"I"},
-													Type:      "Integer",
-													Qualifier: ast.Var,
-												},
+										},
+									}},
+									&ast.Method{Function: ast.Function{Name: "H", Returns: "Vcl.TForm",
+										Parameters: ast.Parameters{
+											{
+												Names: []string{"I"},
+												Type:  "Integer",
 											},
-										}},
-										&ast.Method{Function: ast.Function{Name: "P",
-											Parameters: ast.Parameters{
-												{
-													Names:     []string{"I"},
-													Type:      "Integer",
-													Qualifier: ast.Const,
-												},
+											{
+												Names: []string{"J"},
+												Type:  "K.L",
 											},
-										}},
-										&ast.Method{Function: ast.Function{Name: "P",
-											Parameters: ast.Parameters{
-												{
-													Names:     []string{"I"},
-													Type:      "Integer",
-													Qualifier: ast.ConstRef,
-												},
+										},
+									}},
+									&ast.Method{Function: ast.Function{Name: "P",
+										Parameters: ast.Parameters{
+											{
+												Names:     []string{"I"},
+												Type:      "Integer",
+												Qualifier: ast.Var,
 											},
-										}},
-										&ast.Method{Function: ast.Function{Name: "P",
-											Parameters: ast.Parameters{
-												{
-													Names:     []string{"I"},
-													Type:      "Integer",
-													Qualifier: ast.RefConst,
-												},
+										},
+									}},
+									&ast.Method{Function: ast.Function{Name: "P",
+										Parameters: ast.Parameters{
+											{
+												Names:     []string{"I"},
+												Type:      "Integer",
+												Qualifier: ast.Const,
 											},
-										}},
-										&ast.Method{Function: ast.Function{Name: "P",
-											Parameters: ast.Parameters{
-												{
-													Names:     []string{"I"},
-													Type:      "Integer",
-													Qualifier: ast.Out,
-												},
+										},
+									}},
+									&ast.Method{Function: ast.Function{Name: "P",
+										Parameters: ast.Parameters{
+											{
+												Names:     []string{"I"},
+												Type:      "Integer",
+												Qualifier: ast.ConstRef,
 											},
-										}},
-										&ast.Method{Function: ast.Function{Name: "NoType",
-											Parameters: ast.Parameters{
-												{
-													Names:     []string{"P"},
-													Type:      "",
-													Qualifier: ast.Const,
-												},
+										},
+									}},
+									&ast.Method{Function: ast.Function{Name: "P",
+										Parameters: ast.Parameters{
+											{
+												Names:     []string{"I"},
+												Type:      "Integer",
+												Qualifier: ast.RefConst,
 											},
-										}},
+										},
+									}},
+									&ast.Method{Function: ast.Function{Name: "P",
+										Parameters: ast.Parameters{
+											{
+												Names:     []string{"I"},
+												Type:      "Integer",
+												Qualifier: ast.Out,
+											},
+										},
+									}},
+									&ast.Method{Function: ast.Function{Name: "NoType",
+										Parameters: ast.Parameters{
+											{
+												Names:     []string{"P"},
+												Type:      "",
+												Qualifier: ast.Const,
+											},
+										},
 									}},
 								},
-							},
+							}),
 						},
 					},
 				},
@@ -285,40 +277,28 @@ func TestClassVisibilities(t *testing.T) {
 					Kind: ast.InterfaceSection,
 					Blocks: []ast.FileSectionBlock{
 						ast.TypeBlock{
-							&ast.Class{
-								Name: "C", Sections: []ast.ClassSection{
-									{
-										Visibility: ast.DefaultPublished,
-										Members: []ast.ClassMember{
-											&ast.Field{Variable: *ast.NewVariable("A", "Integer")},
-										},
-									},
-									{
-										Visibility: ast.Public,
-										Members: []ast.ClassMember{
-											&ast.Field{Variable: *ast.NewVariable("B", "Integer")},
-										},
-									},
-									{
-										Visibility: ast.Private,
-										Members: []ast.ClassMember{
-											&ast.Field{Variable: *ast.NewVariable("C", "Integer")},
-										},
-									},
-									{
-										Visibility: ast.Protected,
-										Members: []ast.ClassMember{
-											&ast.Field{Variable: *ast.NewVariable("D", "Integer")},
-										},
-									},
-									{
-										Visibility: ast.Published,
-										Members: []ast.ClassMember{
-											&ast.Field{Variable: *ast.NewVariable("E", "Integer")},
-										},
-									},
+							ast.NewClass("C").WithSection(
+								ast.ClassSection{
+									Visibility: ast.DefaultPublished,
+									Members:    []ast.ClassMember{&ast.Field{Variable: *ast.NewVariable("A", "Integer")}},
 								},
-							},
+								ast.ClassSection{
+									Visibility: ast.Public,
+									Members:    []ast.ClassMember{&ast.Field{Variable: *ast.NewVariable("B", "Integer")}},
+								},
+								ast.ClassSection{
+									Visibility: ast.Private,
+									Members:    []ast.ClassMember{&ast.Field{Variable: *ast.NewVariable("C", "Integer")}},
+								},
+								ast.ClassSection{
+									Visibility: ast.Protected,
+									Members:    []ast.ClassMember{&ast.Field{Variable: *ast.NewVariable("D", "Integer")}},
+								},
+								ast.ClassSection{
+									Visibility: ast.Published,
+									Members:    []ast.ClassMember{&ast.Field{Variable: *ast.NewVariable("E", "Integer")}},
+								},
+							),
 						},
 					},
 				},
@@ -417,13 +397,11 @@ func TestParseClassProperties(t *testing.T) {
 							Kind: ast.InterfaceSection,
 							Blocks: []ast.FileSectionBlock{
 								ast.TypeBlock{
-									&ast.Class{
-										Name: "C", Sections: []ast.ClassSection{
-											{Members: []ast.ClassMember{
-												ptn.prop,
-											}},
-										},
-									},
+									ast.NewClass("C").WithSection(
+										ast.ClassSection{Members: []ast.ClassMember{
+											ptn.prop,
+										}},
+									),
 								},
 							},
 						},
@@ -450,11 +428,9 @@ func TestParseClassProperties(t *testing.T) {
 						Kind: ast.InterfaceSection,
 						Blocks: []ast.FileSectionBlock{
 							ast.TypeBlock{
-								&ast.Class{
-									Name: "C", Sections: []ast.ClassSection{
-										{Members: props},
-									},
-								},
+								ast.NewClass("C").WithSection(
+									ast.ClassSection{Members: props},
+								),
 							},
 						},
 					},
