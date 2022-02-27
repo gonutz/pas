@@ -37,10 +37,23 @@ func classProcessor(class *ast.Class) func(p *parser) error {
 		}
 	}
 
+	appendProperty := func(static bool) func(p *parser) error {
+		return func(p *parser) error {
+			prop, err := p.parseProperty()
+			if err != nil {
+				return err
+			}
+			prop.Class = static
+			class.AppendMemberToCurrentSection(prop)
+			return nil
+		}
+	}
+
 	classSelector := &procSelector{
 		procs: []*namedProc{
 			{"procedure", appendMethod(true)},
 			{"function", appendMethod(true)},
+			{"property", appendProperty(true)},
 			{"var", appendField(true)},
 		},
 		defaultProc: appendField(true),
@@ -54,6 +67,7 @@ func classProcessor(class *ast.Class) func(p *parser) error {
 			{"private", newSection(ast.Private)},
 			{"procedure", appendMethod(false)},
 			{"function", appendMethod(false)},
+			{"property", appendProperty(false)},
 			{"class", classSelector.Do},
 		},
 		defaultProc: appendField(false),

@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/akm/pas/ast"
@@ -271,6 +272,93 @@ func (p *parser) parseVariableDeclaration() (*ast.Variable, error) {
 		return nil, err
 	}
 	return &ast.Variable{Name: name, Type: typ}, nil
+}
+
+func (p *parser) parseProperty() (*ast.Property, error) {
+	name, err := p.identifier("property name")
+	if err != nil {
+		return nil, err
+	}
+	res := &ast.Property{Variable: ast.Variable{Name: name}}
+	if p.sees('[') {
+		err := p.startEndToken('[', ']', func() error {
+			parameters, err := p.parseParameters(']')
+			if err != nil {
+				return err
+			}
+			res.Indexes = parameters
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	if err := p.eat(':'); err != nil {
+		return nil, err
+	}
+	typ, err := p.identifier("property type name")
+	if err != nil {
+		return nil, err
+	}
+	res.Type = typ
+	for !p.sees(';') {
+		if p.seesWord("index") {
+			if err := p.eatWord("index"); err != nil {
+				return nil, err
+			}
+			token := p.nextToken()
+			if !ptnDigits.MatchString(token.text) {
+				return nil, errors.Errorf("expected digit, got %+v", token)
+			}
+			index, err := strconv.Atoi(token.text)
+			if err != nil {
+				return nil, err
+			}
+			res.Index = index
+		} else if p.seesWord("read") {
+			if err := p.eatWord("read"); err != nil {
+				return nil, err
+			}
+			reader, err := p.identifier("property reader name")
+			if err != nil {
+				return nil, err
+			}
+			res.Reader = reader
+		} else if p.seesWord("write") {
+			if err := p.eatWord("write"); err != nil {
+				return nil, err
+			}
+			writer, err := p.identifier("property writer name")
+			if err != nil {
+				return nil, err
+			}
+			res.Writer = writer
+		} else if p.seesWord("default") {
+			if err := p.eatWord("default"); err != nil {
+				return nil, err
+			}
+			defaultValue, err := p.identifier("property default value")
+			if err != nil {
+				return nil, err
+			}
+			res.Default = defaultValue
+		} else if p.seesWord("stored") {
+			if err := p.eatWord("stored"); err != nil {
+				return nil, err
+			}
+			stored, err := p.identifier("property stored value")
+			if err != nil {
+				return nil, err
+			}
+			res.Stored = stored
+		} else {
+			return nil, errors.Errorf("expected property modifier, got %+v", p.peekToken())
+		}
+	}
+	if err := p.eat(';'); err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 func (p *parser) nextToken() token {
