@@ -1,6 +1,8 @@
-package pas
+package parser
 
-import "unicode"
+import (
+	"unicode"
+)
 
 func newTokenizer(code []rune) tokenizer {
 	return tokenizer{
@@ -17,14 +19,17 @@ type tokenizer struct {
 	col  int
 }
 
+func isDigit(r rune) bool {
+	return '0' <= r && r <= '9'
+}
+func isDigitFirst(r rune) bool {
+	return isDigit(r) || r == '-' // || r == '+' // Don't allow + for now
+}
+
 func (t *tokenizer) next() token {
 	haveType := tokenIllegal
 	start := t.cur
 	line, col := t.line, t.col
-
-	digit := func(r rune) bool {
-		return '0' <= r && r <= '9'
-	}
 
 	r := t.currentRune()
 	switch r {
@@ -57,6 +62,17 @@ func (t *tokenizer) next() token {
 			t.nextRune()
 			haveType = tokenComment
 		}
+	case '\'':
+		var last rune
+		for {
+			r := t.nextRune()
+			if last != '\\' && r == '\'' {
+				break
+			}
+			last = r
+		}
+		t.nextRune()
+		haveType = tokenString
 	default:
 		if unicode.IsSpace(r) {
 			for unicode.IsSpace(t.nextRune()) {
@@ -64,11 +80,35 @@ func (t *tokenizer) next() token {
 			haveType = tokenWhiteSpace
 		} else if r == '_' || unicode.IsLetter(r) {
 			word := func(r rune) bool {
-				return r == '_' || unicode.IsLetter(r) || digit(r)
+				return r == '_' || unicode.IsLetter(r) || isDigit(r)
 			}
 			for word(t.nextRune()) {
 			}
 			haveType = tokenWord
+		} else if isDigitFirst(r) {
+			hasDot := false
+			for {
+				r := t.nextRune()
+				if isDigit(r) {
+					// OK
+				} else if r == '.' {
+					if t.seek(1) == '.' {
+						break
+					} else {
+						if hasDot {
+							break
+						}
+						hasDot = true
+					}
+				} else {
+					break
+				}
+			}
+			if hasDot {
+				haveType = tokenReal
+			} else {
+				haveType = tokenInt
+			}
 		} else {
 			t.nextRune()
 		}
@@ -100,4 +140,11 @@ func (t *tokenizer) nextRune() rune {
 		t.cur++
 	}
 	return t.currentRune()
+}
+
+func (t *tokenizer) seek(n int) rune {
+	if t.cur+n < len(t.code) {
+		return t.code[t.cur+n]
+	}
+	return 0
 }
