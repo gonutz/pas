@@ -85,7 +85,10 @@ func parametersProc(dest *ast.Parameters, endToken tokenType) func(*parser) erro
 						return err
 					}
 					t := p.nextToken()
-					if t.tokenType != tokenWord {
+					switch t.tokenType {
+					case tokenWord, tokenInt, tokenReal:
+						// OK
+					default:
 						return errors.Errorf("expected parameter default value, got %+v", t)
 					}
 					param.DefaultValue = t.text

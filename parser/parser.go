@@ -307,8 +307,8 @@ func (p *parser) parseProperty() (*ast.Property, error) {
 				return nil, err
 			}
 			token := p.nextToken()
-			if !ptnDigits.MatchString(token.text) {
-				return nil, errors.Errorf("expected digit, got %+v", token)
+			if token.tokenType != tokenInt {
+				return nil, errors.Errorf("expected int, got %+v", token)
 			}
 			index, err := strconv.Atoi(token.text)
 			if err != nil {
@@ -337,11 +337,14 @@ func (p *parser) parseProperty() (*ast.Property, error) {
 			if err := p.eatWord("default"); err != nil {
 				return nil, err
 			}
-			defaultValue, err := p.identifier("property default value")
-			if err != nil {
-				return nil, err
+			t := p.nextToken()
+			switch t.tokenType {
+			case tokenWord, tokenInt, tokenReal:
+			// OK
+			default:
+				return nil, errors.Errorf("expected property default value, got %+v", t)
 			}
-			res.Default = defaultValue
+			res.Default = t.text
 		} else if p.seesWord("stored") {
 			if err := p.eatWord("stored"); err != nil {
 				return nil, err
