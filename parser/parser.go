@@ -150,11 +150,21 @@ func (p *parser) parseSectionBlocks() ([]ast.FileSectionBlock, error) {
 			}
 			blocks = append(blocks, typeBlock)
 		} else if p.seesWord("var") {
-			varBlock, err := p.parseVarBlock()
+			varBlock, err := p.parseVarBlock("var")
 			if err != nil {
 				return nil, err
 			}
 			blocks = append(blocks, varBlock)
+		} else if p.seesWord("threadvar") {
+			varBlock, err := p.parseVarBlock("threadvar")
+			if err != nil {
+				return nil, err
+			}
+			threadVarBlock := make(ast.ThreadVarBlock, len(varBlock))
+			for i, v := range varBlock {
+				threadVarBlock[i] = v
+			}
+			blocks = append(blocks, threadVarBlock)
 		} else if p.seesWord("function") {
 			if err := p.eatWord("function"); err != nil {
 				return nil, err
@@ -225,8 +235,8 @@ func (p *parser) parseTypeBlock() (ast.TypeBlock, error) {
 	return res, nil
 }
 
-func (p *parser) parseVarBlock() (ast.VarBlock, error) {
-	if err := p.eatWord("var"); err != nil {
+func (p *parser) parseVarBlock(word string) (ast.VarBlock, error) {
+	if err := p.eatWord(word); err != nil {
 		return nil, err
 	}
 	var vars ast.VarBlock
