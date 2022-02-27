@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/akm/pas/ast"
@@ -328,64 +330,133 @@ func TestClassVisibilities(t *testing.T) {
 
 // https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Properties_(Delphi)
 func TestParseClassProperties(t *testing.T) {
-	parseFile(t, `
-  unit U;
-  interface
-  type C = class
-  property Color: TColor read GetColor write SetColor;
-  property Objects[Index: Integer]: TObject read GetObject write SetObject;
-  property Pixels[X, Y: Integer]: TColor read GetPixel write SetPixel;
-  property Values[const Name: string]: string read GetValue write SetValue;
-  property Left:   Longint index 0 read GetCoordinate write SetCoordinate;
-  property Top:    Longint index 1 read GetCoordinate write SetCoordinate;
-  property Right:  Longint index 2 read GetCoordinate write SetCoordinate;
-  property Bottom: Longint index 3 read GetCoordinate write SetCoordinate;
-  property Coordinates[Index: Integer]: Longint read GetCoordinate write SetCoordinate;
-  property Name: TComponentName read FName write SetName stored False;
-  property Tag: Longint read FTag write FTag default 0;
-  class property Red: Integer read FRed write FRed;
-  end;
-  implementation
-  end.`,
-		&ast.File{
-			Kind: ast.Unit,
-			Name: "U",
-			Sections: []*ast.FileSection{
-				{
-					Kind: ast.InterfaceSection,
-					Blocks: []ast.FileSectionBlock{
-						ast.TypeBlock{
-							&ast.Class{
-								Name: "C", Sections: []ast.ClassSection{
-									{Members: []ast.ClassMember{
-										&ast.Property{Variable: ast.Variable{Name: "Color", Type: "TColor"}, Reader: "GetColor", Writer: "SetColor"},
-										&ast.Property{Variable: ast.Variable{Name: "Objects", Type: "TObject"}, Reader: "GetObject", Writer: "SetObject", Indexes: []*ast.Parameter{
-											{Names: []string{"Index"}, Type: "Integer"},
-										}},
-										&ast.Property{Variable: ast.Variable{Name: "Pixels", Type: "TColor"}, Reader: "GetPixel", Writer: "SetPixel", Indexes: []*ast.Parameter{
-											{Names: []string{"X", "Y"}, Type: "Integer"},
-										}},
-										&ast.Property{Variable: ast.Variable{Name: "Values", Type: "string"}, Reader: "GetValue", Writer: "SetValue", Indexes: []*ast.Parameter{
-											{Names: []string{"Name"}, Type: "string", Qualifier: ast.Const},
-										}},
-										&ast.Property{Variable: ast.Variable{Name: "Left", Type: "Longint"}, Reader: "GetCoordinate", Writer: "SetCoordinate", Index: 0},
-										&ast.Property{Variable: ast.Variable{Name: "Top", Type: "Longint"}, Reader: "GetCoordinate", Writer: "SetCoordinate", Index: 1},
-										&ast.Property{Variable: ast.Variable{Name: "Right", Type: "Longint"}, Reader: "GetCoordinate", Writer: "SetCoordinate", Index: 2},
-										&ast.Property{Variable: ast.Variable{Name: "Bottom", Type: "Longint"}, Reader: "GetCoordinate", Writer: "SetCoordinate", Index: 3},
-										&ast.Property{Variable: ast.Variable{Name: "Coordinates", Type: "Longint"}, Reader: "GetCoordinate", Writer: "SetCoordinate", Indexes: []*ast.Parameter{
-											{Names: []string{"Index"}, Type: "Integer"},
-										}},
-										&ast.Property{Variable: ast.Variable{Name: "Name", Type: "TComponentName"}, Reader: "FName", Writer: "SetName", Stored: "False"},
-										&ast.Property{Variable: ast.Variable{Name: "Tag", Type: "Longint"}, Reader: "FTag", Writer: "FTag", Default: "0"},
-										&ast.Property{Variable: ast.Variable{Name: "Red", Type: "Integer"}, Reader: "FRed", Writer: "FRed", Class: true},
-									}},
+	type pattern struct {
+		code string
+		prop *ast.Property
+	}
+
+	patterns := []*pattern{
+		{
+			"property Color: TColor read GetColor write SetColor;",
+			&ast.Property{Variable: ast.Variable{Name: "Color", Type: "TColor"}, Reader: "GetColor", Writer: "SetColor"},
+		},
+		{
+			"property Objects[Index: Integer]: TObject read GetObject write SetObject;",
+			&ast.Property{Variable: ast.Variable{Name: "Objects", Type: "TObject"}, Reader: "GetObject", Writer: "SetObject", Indexes: []*ast.Parameter{
+				{Names: []string{"Index"}, Type: "Integer"},
+			}},
+		},
+		{
+			"property Pixels[X, Y: Integer]: TColor read GetPixel write SetPixel;",
+			&ast.Property{Variable: ast.Variable{Name: "Pixels", Type: "TColor"}, Reader: "GetPixel", Writer: "SetPixel", Indexes: []*ast.Parameter{
+				{Names: []string{"X", "Y"}, Type: "Integer"},
+			}},
+		},
+		{
+			"property Values[const Name: string]: string read GetValue write SetValue;",
+			&ast.Property{Variable: ast.Variable{Name: "Values", Type: "string"}, Reader: "GetValue", Writer: "SetValue", Indexes: []*ast.Parameter{
+				{Names: []string{"Name"}, Type: "string", Qualifier: ast.Const},
+			}},
+		},
+		{
+			"property Left:   Longint index 0 read GetCoordinate write SetCoordinate;",
+			&ast.Property{Variable: ast.Variable{Name: "Left", Type: "Longint"}, Reader: "GetCoordinate", Writer: "SetCoordinate", Index: 0},
+		},
+		{
+			"property Top:    Longint index 1 read GetCoordinate write SetCoordinate;",
+			&ast.Property{Variable: ast.Variable{Name: "Top", Type: "Longint"}, Reader: "GetCoordinate", Writer: "SetCoordinate", Index: 1},
+		},
+		{
+			"property Right:  Longint index 2 read GetCoordinate write SetCoordinate;",
+			&ast.Property{Variable: ast.Variable{Name: "Right", Type: "Longint"}, Reader: "GetCoordinate", Writer: "SetCoordinate", Index: 2},
+		},
+		{
+			"property Bottom: Longint index 3 read GetCoordinate write SetCoordinate;",
+			&ast.Property{Variable: ast.Variable{Name: "Bottom", Type: "Longint"}, Reader: "GetCoordinate", Writer: "SetCoordinate", Index: 3},
+		},
+		{
+			"property Coordinates[Index: Integer]: Longint read GetCoordinate write SetCoordinate;",
+			&ast.Property{Variable: ast.Variable{Name: "Coordinates", Type: "Longint"}, Reader: "GetCoordinate", Writer: "SetCoordinate", Indexes: []*ast.Parameter{
+				{Names: []string{"Index"}, Type: "Integer"},
+			}},
+		},
+		{
+			"property Name: TComponentName read FName write SetName stored False;",
+			&ast.Property{Variable: ast.Variable{Name: "Name", Type: "TComponentName"}, Reader: "FName", Writer: "SetName", Stored: "False"},
+		},
+		{
+			"property Tag: Longint read FTag write FTag default 0;",
+			&ast.Property{Variable: ast.Variable{Name: "Tag", Type: "Longint"}, Reader: "FTag", Writer: "FTag", Default: "0"},
+		},
+		{
+			"class property Red: Integer read FRed write FRed;",
+			&ast.Property{Variable: ast.Variable{Name: "Red", Type: "Integer"}, Reader: "FRed", Writer: "FRed", Class: true},
+		},
+	}
+
+	unitTemplate := `unit U;
+	interface
+	type C = class
+	%s
+	end;
+	implementation
+	end.`
+
+	for _, ptn := range patterns {
+		t.Run(ptn.code, func(t *testing.T) {
+			parseFile(t, fmt.Sprintf(unitTemplate, ptn.code),
+				&ast.File{
+					Kind: ast.Unit,
+					Name: "U",
+					Sections: []*ast.FileSection{
+						{
+							Kind: ast.InterfaceSection,
+							Blocks: []ast.FileSectionBlock{
+								ast.TypeBlock{
+									&ast.Class{
+										Name: "C", Sections: []ast.ClassSection{
+											{Members: []ast.ClassMember{
+												ptn.prop,
+											}},
+										},
+									},
+								},
+							},
+						},
+						{Kind: ast.ImplementationSection},
+					},
+				},
+			)
+		})
+	}
+
+	t.Run("all in one", func(t *testing.T) {
+		codes := make([]string, len(patterns))
+		props := make([]ast.ClassMember, len(patterns))
+		for i, ptn := range patterns {
+			codes[i] = ptn.code
+			props[i] = ptn.prop
+		}
+		parseFile(t, fmt.Sprintf(unitTemplate, strings.Join(codes, "\n")),
+			&ast.File{
+				Kind: ast.Unit,
+				Name: "U",
+				Sections: []*ast.FileSection{
+					{
+						Kind: ast.InterfaceSection,
+						Blocks: []ast.FileSectionBlock{
+							ast.TypeBlock{
+								&ast.Class{
+									Name: "C", Sections: []ast.ClassSection{
+										{Members: props},
+									},
 								},
 							},
 						},
 					},
+					{Kind: ast.ImplementationSection},
 				},
-				{Kind: ast.ImplementationSection},
 			},
-		},
-	)
+		)
+	})
 }
