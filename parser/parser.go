@@ -225,7 +225,7 @@ func (p *parser) parseVarBlock() (ast.VarBlock, error) {
 		return nil, err
 	}
 	var vars ast.VarBlock
-	for p.sees(tokenWord) && !p.seesKeyword() {
+	for p.sees(tokenWord) && !p.seesReservedWord() {
 		varDec, err := p.parseVariableDeclaration()
 		if err != nil {
 			return nil, err
@@ -327,12 +327,13 @@ func (p *parser) seesWords(texts ...string) bool {
 	return false
 }
 
-func (p *parser) seesKeyword() bool {
+func (p *parser) seesReservedWord() bool {
 	t := p.peekToken()
-	return t.tokenType == tokenWord && isKeyword(strings.ToLower(t.text))
+	return t.tokenType == tokenWord && isReservedWord(strings.ToLower(t.text))
 }
 
-func isKeyword(s string) bool {
+// https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Fundamental_Syntactic_Elements_(Delphi)#Reserved_Words
+func isReservedWord(s string) bool {
 	// TODO Complete the list of keywords, these end blocks (var, type, ...).
 	return s == "implementation" || s == "var"
 }
