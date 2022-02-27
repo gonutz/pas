@@ -3,6 +3,16 @@ package parser
 import "github.com/akm/pas/ast"
 
 func parametersProc(dest *ast.Parameters, endToken tokenType) func(*parser) error {
+	eatRef := func(p *parser) error {
+		err := p.startEndToken('[', ']', func() (err error) {
+			return p.eatWord("ref")
+		})
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
 	return func(p *parser) error {
 		res := ast.Parameters{}
 		for p.sees(tokenWord) || p.sees('[') {
@@ -16,15 +26,13 @@ func parametersProc(dest *ast.Parameters, endToken tokenType) func(*parser) erro
 				if err := p.eatWord("const"); err != nil {
 					return err
 				}
-				param.Qualifier = ast.Const
 				if p.sees('[') {
-					err := p.startEndToken('[', ']', func() (err error) {
-						return p.eatWord("ref")
-					})
-					if err != nil {
+					if err := eatRef(p); err != nil {
 						return err
 					}
 					param.Qualifier = ast.ConstRef
+				} else {
+					param.Qualifier = ast.Const
 				}
 			} else if p.seesWord("out") {
 				if err := p.eatWord("out"); err != nil {
@@ -32,10 +40,7 @@ func parametersProc(dest *ast.Parameters, endToken tokenType) func(*parser) erro
 				}
 				param.Qualifier = ast.Out
 			} else if p.sees('[') {
-				err := p.startEndToken('[', ']', func() (err error) {
-					return p.eatWord("ref")
-				})
-				if err != nil {
+				if err := eatRef(p); err != nil {
 					return err
 				}
 				if err := p.eatWord("const"); err != nil {
