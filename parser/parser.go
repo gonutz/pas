@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/akm/delparser/ast"
@@ -256,10 +257,11 @@ func (p *parser) parseParameters(endToken tokenType) (ast.Parameters, error) {
 }
 
 func (p *parser) parseVariableDeclaration() (*ast.Variable, error) {
-	name, err := p.identifier("field name")
+	names, err := p.parseSeparatedString(',', "variable name")
 	if err != nil {
 		return nil, err
 	}
+	r := &ast.Variable{Names: names}
 	if err := p.eat(':'); err != nil {
 		return nil, err
 	}
@@ -267,10 +269,52 @@ func (p *parser) parseVariableDeclaration() (*ast.Variable, error) {
 	if err != nil {
 		return nil, err
 	}
+	if p.sees('[') {
+		err := p.startEndToken('[', ']', func() error {
+			token := p.nextToken()
+			if token.tokenType != tokenInt {
+				return errors.Errorf("expected int, got %+v", token)
+			}
+			l, err := strconv.Atoi(token.text)
+			if err != nil {
+				return err
+			}
+			r.Length = l
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	r.Type = typ
+	if p.seesWord("absolute") {
+		if err := p.eatWord("absolute"); err != nil {
+			return nil, err
+		}
+		abs, err := p.identifier("absolute reference name")
+		if err != nil {
+			return nil, err
+		}
+		r.Absolute = abs
+	}
+
+	if p.sees('=') {
+		if err := p.eat('='); err != nil {
+			return nil, err
+		}
+		t := p.nextToken()
+		switch t.tokenType {
+		case tokenWord, tokenInt, tokenReal, tokenString:
+			// OK
+		default:
+			return nil, errors.Errorf("expected parameter default value, got %+v", t)
+		}
+		r.Default = t.text
+	}
 	if err := p.eat(';'); err != nil {
 		return nil, err
 	}
-	return &ast.Variable{Names: []string{name}, Type: typ}, nil
+	return r, nil
 }
 
 func (p *parser) parseProperty() (*ast.Property, error) {
