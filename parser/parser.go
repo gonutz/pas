@@ -286,7 +286,7 @@ func (p *parser) parseVariableDeclaration() (*ast.Variable, error) {
 			return nil, err
 		}
 	}
-	r.Type = typ
+	r.Type = ast.TypeName(typ)
 	if p.seesWord("absolute") {
 		if err := p.eatWord("absolute"); err != nil {
 			return nil, err

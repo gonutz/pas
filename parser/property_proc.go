@@ -29,7 +29,7 @@ func propertyProc(res *ast.Property) func(*parser) error {
 		if err != nil {
 			return err
 		}
-		res.Type = typ
+		res.Type = ast.TypeName(typ)
 		for !p.sees(';') {
 			if p.seesWord("index") {
 				if err := p.eatWord("index"); err != nil {
