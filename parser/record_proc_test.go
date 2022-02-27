@@ -30,7 +30,7 @@ func Test2RecordsInATypeBlock(t *testing.T) {
 							&ast.Record{
 								Name: "T1",
 								Members: []ast.ClassMember{
-									&ast.Field{Variable: ast.Variable{Name: "A", Type: "Integer"}},
+									&ast.Field{Variable: *ast.NewVariable("A", "Integer")},
 								},
 							},
 							&ast.Record{

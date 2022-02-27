@@ -85,8 +85,8 @@ func TestParseClassFields(t *testing.T) {
 								Name: "C",
 								Sections: []ast.ClassSection{
 									{Members: []ast.ClassMember{
-										&ast.Field{Variable: ast.Variable{Name: "A", Type: "Integer"}},
-										&ast.Field{Variable: ast.Variable{Name: "B", Type: "C.D"}},
+										&ast.Field{Variable: *ast.NewVariable("A", "Integer")},
+										&ast.Field{Variable: *ast.NewVariable("B", "C.D")},
 									}},
 								},
 							},
@@ -290,31 +290,31 @@ func TestClassVisibilities(t *testing.T) {
 									{
 										Visibility: ast.DefaultPublished,
 										Members: []ast.ClassMember{
-											&ast.Field{Variable: ast.Variable{Name: "A", Type: "Integer"}},
+											&ast.Field{Variable: *ast.NewVariable("A", "Integer")},
 										},
 									},
 									{
 										Visibility: ast.Public,
 										Members: []ast.ClassMember{
-											&ast.Field{Variable: ast.Variable{Name: "B", Type: "Integer"}},
+											&ast.Field{Variable: *ast.NewVariable("B", "Integer")},
 										},
 									},
 									{
 										Visibility: ast.Private,
 										Members: []ast.ClassMember{
-											&ast.Field{Variable: ast.Variable{Name: "C", Type: "Integer"}},
+											&ast.Field{Variable: *ast.NewVariable("C", "Integer")},
 										},
 									},
 									{
 										Visibility: ast.Protected,
 										Members: []ast.ClassMember{
-											&ast.Field{Variable: ast.Variable{Name: "D", Type: "Integer"}},
+											&ast.Field{Variable: *ast.NewVariable("D", "Integer")},
 										},
 									},
 									{
 										Visibility: ast.Published,
 										Members: []ast.ClassMember{
-											&ast.Field{Variable: ast.Variable{Name: "E", Type: "Integer"}},
+											&ast.Field{Variable: *ast.NewVariable("E", "Integer")},
 										},
 									},
 								},
@@ -338,63 +338,63 @@ func TestParseClassProperties(t *testing.T) {
 	patterns := []*pattern{
 		{
 			"property Color: TColor read GetColor write SetColor;",
-			&ast.Property{Variable: ast.Variable{Name: "Color", Type: "TColor"}, Reader: "GetColor", Writer: "SetColor"},
+			&ast.Property{Variable: *ast.NewVariable("Color", "TColor"), Reader: "GetColor", Writer: "SetColor"},
 		},
 		{
 			"property Objects[Index: Integer]: TObject read GetObject write SetObject;",
-			&ast.Property{Variable: ast.Variable{Name: "Objects", Type: "TObject"}, Reader: "GetObject", Writer: "SetObject", Indexes: []*ast.Parameter{
+			&ast.Property{Variable: *ast.NewVariable("Objects", "TObject"), Reader: "GetObject", Writer: "SetObject", Indexes: []*ast.Parameter{
 				{Names: []string{"Index"}, Type: "Integer"},
 			}},
 		},
 		{
 			"property Pixels[X, Y: Integer]: TColor read GetPixel write SetPixel;",
-			&ast.Property{Variable: ast.Variable{Name: "Pixels", Type: "TColor"}, Reader: "GetPixel", Writer: "SetPixel", Indexes: []*ast.Parameter{
+			&ast.Property{Variable: *ast.NewVariable("Pixels", "TColor"), Reader: "GetPixel", Writer: "SetPixel", Indexes: []*ast.Parameter{
 				{Names: []string{"X", "Y"}, Type: "Integer"},
 			}},
 		},
 		{
 			"property Values[const Name: string]: string read GetValue write SetValue;",
-			&ast.Property{Variable: ast.Variable{Name: "Values", Type: "string"}, Reader: "GetValue", Writer: "SetValue", Indexes: []*ast.Parameter{
+			&ast.Property{Variable: *ast.NewVariable("Values", "string"), Reader: "GetValue", Writer: "SetValue", Indexes: []*ast.Parameter{
 				{Names: []string{"Name"}, Type: "string", Qualifier: ast.Const},
 			}},
 		},
 		{
 			"property Left:   Longint index 0 read GetCoordinate write SetCoordinate;",
-			&ast.Property{Variable: ast.Variable{Name: "Left", Type: "Longint"}, Reader: "GetCoordinate", Writer: "SetCoordinate", Index: 0},
+			&ast.Property{Variable: *ast.NewVariable("Left", "Longint"), Reader: "GetCoordinate", Writer: "SetCoordinate", Index: 0},
 		},
 		{
 			"property Top:    Longint index 1 read GetCoordinate write SetCoordinate;",
-			&ast.Property{Variable: ast.Variable{Name: "Top", Type: "Longint"}, Reader: "GetCoordinate", Writer: "SetCoordinate", Index: 1},
+			&ast.Property{Variable: *ast.NewVariable("Top", "Longint"), Reader: "GetCoordinate", Writer: "SetCoordinate", Index: 1},
 		},
 		{
 			"property Right:  Longint index 2 read GetCoordinate write SetCoordinate;",
-			&ast.Property{Variable: ast.Variable{Name: "Right", Type: "Longint"}, Reader: "GetCoordinate", Writer: "SetCoordinate", Index: 2},
+			&ast.Property{Variable: *ast.NewVariable("Right", "Longint"), Reader: "GetCoordinate", Writer: "SetCoordinate", Index: 2},
 		},
 		{
 			"property Bottom: Longint index 3 read GetCoordinate write SetCoordinate;",
-			&ast.Property{Variable: ast.Variable{Name: "Bottom", Type: "Longint"}, Reader: "GetCoordinate", Writer: "SetCoordinate", Index: 3},
+			&ast.Property{Variable: *ast.NewVariable("Bottom", "Longint"), Reader: "GetCoordinate", Writer: "SetCoordinate", Index: 3},
 		},
 		{
 			"property Coordinates[Index: Integer]: Longint read GetCoordinate write SetCoordinate;",
-			&ast.Property{Variable: ast.Variable{Name: "Coordinates", Type: "Longint"}, Reader: "GetCoordinate", Writer: "SetCoordinate", Indexes: []*ast.Parameter{
+			&ast.Property{Variable: *ast.NewVariable("Coordinates", "Longint"), Reader: "GetCoordinate", Writer: "SetCoordinate", Indexes: []*ast.Parameter{
 				{Names: []string{"Index"}, Type: "Integer"},
 			}},
 		},
 		{
 			"property Name: TComponentName read FName write SetName stored False;",
-			&ast.Property{Variable: ast.Variable{Name: "Name", Type: "TComponentName"}, Reader: "FName", Writer: "SetName", Stored: "False"},
+			&ast.Property{Variable: *ast.NewVariable("Name", "TComponentName"), Reader: "FName", Writer: "SetName", Stored: "False"},
 		},
 		{
 			"property Tag: Longint read FTag write FTag default 0;",
-			&ast.Property{Variable: ast.Variable{Name: "Tag", Type: "Longint"}, Reader: "FTag", Writer: "FTag", Default: "0"},
+			&ast.Property{Variable: *ast.NewVariable("Tag", "Longint"), Reader: "FTag", Writer: "FTag", Default: "0"},
 		},
 		{
 			"property Name: string read FName write FName default 'User1';",
-			&ast.Property{Variable: ast.Variable{Name: "Name", Type: "string"}, Reader: "FName", Writer: "FName", Default: "'User1'"},
+			&ast.Property{Variable: *ast.NewVariable("Name", "string"), Reader: "FName", Writer: "FName", Default: "'User1'"},
 		},
 		{
 			"class property Red: Integer read FRed write FRed;",
-			&ast.Property{Variable: ast.Variable{Name: "Red", Type: "Integer"}, Reader: "FRed", Writer: "FRed", Class: true},
+			&ast.Property{Variable: *ast.NewVariable("Red", "Integer"), Reader: "FRed", Writer: "FRed", Class: true},
 		},
 	}
 

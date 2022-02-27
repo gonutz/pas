@@ -84,8 +84,8 @@ func TestInterfaceSection(t *testing.T) {
 			S: string;`,
 			[]ast.FileSectionBlock{
 				ast.VarBlock{
-					{Name: "I", Type: "Integer"},
-					{Name: "S", Type: "string"},
+					ast.NewVariable("I", "Integer"),
+					ast.NewVariable("S", "string"),
 				},
 			},
 		},
@@ -94,8 +94,8 @@ func TestInterfaceSection(t *testing.T) {
 			`var I: Integer;
 			var S: string;`,
 			[]ast.FileSectionBlock{
-				ast.VarBlock{{Name: "I", Type: "Integer"}},
-				ast.VarBlock{{Name: "S", Type: "string"}},
+				ast.VarBlock{ast.NewVariable("I", "Integer")},
+				ast.VarBlock{ast.NewVariable("S", "string")},
 			},
 		},
 		{
@@ -103,7 +103,7 @@ func TestInterfaceSection(t *testing.T) {
 			`var I: Integer;
 			function Bar: string;`,
 			[]ast.FileSectionBlock{
-				ast.VarBlock{{Name: "I", Type: "Integer"}},
+				ast.VarBlock{ast.NewVariable("I", "Integer")},
 				&ast.Function{Name: "Bar", Returns: "string"},
 			},
 		},
@@ -112,7 +112,7 @@ func TestInterfaceSection(t *testing.T) {
 			`var I: Integer;
 			procedure B(var S: string; X: Integer);`,
 			[]ast.FileSectionBlock{
-				ast.VarBlock{{Name: "I", Type: "Integer"}},
+				ast.VarBlock{ast.NewVariable("I", "Integer")},
 				&ast.Function{Name: "B", Parameters: ast.Parameters{
 					{Names: []string{"S"}, Type: "string", Qualifier: ast.Var},
 					{Names: []string{"X"}, Type: "Integer"},

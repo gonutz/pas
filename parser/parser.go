@@ -270,7 +270,7 @@ func (p *parser) parseVariableDeclaration() (*ast.Variable, error) {
 	if err := p.eat(';'); err != nil {
 		return nil, err
 	}
-	return &ast.Variable{Name: name, Type: typ}, nil
+	return &ast.Variable{Names: []string{name}, Type: typ}, nil
 }
 
 func (p *parser) parseProperty() (*ast.Property, error) {
@@ -278,7 +278,7 @@ func (p *parser) parseProperty() (*ast.Property, error) {
 	if err != nil {
 		return nil, err
 	}
-	res := &ast.Property{Variable: ast.Variable{Name: name}}
+	res := &ast.Property{Variable: ast.Variable{Names: []string{name}}}
 	if err := propertyProc(res)(p); err != nil {
 		return nil, err
 	}
