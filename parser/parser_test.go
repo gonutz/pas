@@ -195,7 +195,7 @@ func TestParseClassFunctions(t *testing.T) {
 								Name: "C", Sections: []ast.ClassSection{
 									{Members: []ast.ClassMember{
 										&ast.Method{Function: ast.Function{Name: "A"}},
-										&ast.Method{Function: ast.Function{Name: "B"}},
+										&ast.Method{Function: ast.Function{Name: "B", Parameters: ast.Parameters{}}},
 										&ast.Method{Function: ast.Function{Name: "C",
 											Parameters: ast.Parameters{
 												{
@@ -225,7 +225,7 @@ func TestParseClassFunctions(t *testing.T) {
 											},
 										}},
 										&ast.Method{Function: ast.Function{Name: "A", Returns: "Integer"}},
-										&ast.Method{Function: ast.Function{Name: "B", Returns: "string"}},
+										&ast.Method{Function: ast.Function{Name: "B", Returns: "string", Parameters: ast.Parameters{}}},
 										&ast.Method{Function: ast.Function{Name: "C", Returns: "Pointer",
 											Parameters: ast.Parameters{
 												{

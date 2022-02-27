@@ -225,83 +225,11 @@ func (p *parser) parseFunctionDeclaration() (res *ast.Function, rerr error) {
 	f := &ast.Function{Name: name}
 	if p.sees('(') {
 		err := p.startEndToken('(', ')', func() (err error) {
-			for p.sees(tokenWord) || p.sees('[') {
-				param := &ast.Parameter{}
-
-				if p.seesWord("var") {
-					if err := p.eatWord("var"); err != nil {
-						return err
-					}
-					param.Qualifier = ast.Var
-				} else if p.seesWord("const") {
-					if err := p.eatWord("const"); err != nil {
-						return err
-					}
-					param.Qualifier = ast.Const
-					if p.sees('[') {
-						err := p.startEndToken('[', ']', func() (err error) {
-							return p.eatWord("ref")
-						})
-						if err != nil {
-							return err
-						}
-						param.Qualifier = ast.ConstRef
-					}
-				} else if p.seesWord("out") {
-					if err := p.eatWord("out"); err != nil {
-						return err
-					}
-					param.Qualifier = ast.Out
-				} else if p.sees('[') {
-					err := p.startEndToken('[', ']', func() (err error) {
-						return p.eatWord("ref")
-					})
-					if err != nil {
-						return err
-					}
-					if err := p.eatWord("const"); err != nil {
-						return err
-					}
-					param.Qualifier = ast.RefConst
-				}
-
-				firstId, err := p.identifier("parameter name")
-				if err != nil {
-					return err
-				}
-				param.Names = append(param.Names, firstId)
-				for p.sees(',') {
-					if err := p.eat(','); err != nil {
-						return err
-					}
-					id, err := p.identifier("parameter name")
-					if err != nil {
-						return err
-					}
-					param.Names = append(param.Names, id)
-				}
-				if p.sees(':') {
-					if err := p.eat(':'); err != nil {
-						return err
-					}
-					pt, err := p.qualifiedIdentifier("parameter type")
-					if err != nil {
-						return err
-					}
-					param.Type = pt
-				}
-				f.Parameters = append(f.Parameters, param)
-				if p.sees(';') {
-					p.eat(';')
-				} else if p.sees(')') {
-					break
-				} else {
-					if err := p.eat(','); err != nil {
-						return err
-					}
-					break // The last parameter is not followed by a ';'.
-				}
+			parameters, err := p.parseParameters(')')
+			if err != nil {
+				return err
 			}
+			f.Parameters = parameters
 			return nil
 		})
 		if err != nil {
@@ -322,6 +250,87 @@ func (p *parser) parseFunctionDeclaration() (res *ast.Function, rerr error) {
 		return nil, err
 	}
 	return f, nil
+}
+
+func (p *parser) parseParameters(endToken tokenType) (ast.Parameters, error) {
+	res := ast.Parameters{}
+	for p.sees(tokenWord) || p.sees('[') {
+		param := &ast.Parameter{}
+		if p.seesWord("var") {
+			if err := p.eatWord("var"); err != nil {
+				return nil, err
+			}
+			param.Qualifier = ast.Var
+		} else if p.seesWord("const") {
+			if err := p.eatWord("const"); err != nil {
+				return nil, err
+			}
+			param.Qualifier = ast.Const
+			if p.sees('[') {
+				err := p.startEndToken('[', ']', func() (err error) {
+					return p.eatWord("ref")
+				})
+				if err != nil {
+					return nil, err
+				}
+				param.Qualifier = ast.ConstRef
+			}
+		} else if p.seesWord("out") {
+			if err := p.eatWord("out"); err != nil {
+				return nil, err
+			}
+			param.Qualifier = ast.Out
+		} else if p.sees('[') {
+			err := p.startEndToken('[', ']', func() (err error) {
+				return p.eatWord("ref")
+			})
+			if err != nil {
+				return nil, err
+			}
+			if err := p.eatWord("const"); err != nil {
+				return nil, err
+			}
+			param.Qualifier = ast.RefConst
+		}
+
+		firstId, err := p.identifier("parameter name")
+		if err != nil {
+			return nil, err
+		}
+		param.Names = append(param.Names, firstId)
+		for p.sees(',') {
+			if err := p.eat(','); err != nil {
+				return nil, err
+			}
+			id, err := p.identifier("parameter name")
+			if err != nil {
+				return nil, err
+			}
+			param.Names = append(param.Names, id)
+		}
+		if p.sees(':') {
+			if err := p.eat(':'); err != nil {
+				return nil, err
+			}
+			pt, err := p.qualifiedIdentifier("parameter type")
+			if err != nil {
+				return nil, err
+			}
+			param.Type = pt
+		}
+		res = append(res, param)
+		if p.sees(';') {
+			p.eat(';')
+		} else if p.sees(endToken) {
+			break
+		} else {
+			if err := p.eat(','); err != nil {
+				return nil, err
+			}
+			break // The last parameter is not followed by a ';'.
+		}
+	}
+	return res, nil
 }
 
 func (p *parser) parseVariableDeclaration() (*ast.Variable, error) {
