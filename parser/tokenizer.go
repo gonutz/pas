@@ -62,6 +62,17 @@ func (t *tokenizer) next() token {
 			t.nextRune()
 			haveType = tokenComment
 		}
+	case '\'':
+		var last rune
+		for {
+			r := t.nextRune()
+			if last != '\\' && r == '\'' {
+				break
+			}
+			last = r
+		}
+		t.nextRune()
+		haveType = tokenString
 	default:
 		if unicode.IsSpace(r) {
 			for unicode.IsSpace(t.nextRune()) {

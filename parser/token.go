@@ -24,6 +24,7 @@ const (
 	tokenComment    tokenType = 258
 	tokenInt        tokenType = 259
 	tokenReal       tokenType = 260
+	tokenString     tokenType = 261
 )
 
 func (t token) String() string {
@@ -57,6 +58,8 @@ func (t tokenType) String() string {
 		return "int"
 	case tokenReal:
 		return "real"
+	case tokenString:
+		return "string"
 	default:
 		if 0 <= t && t <= 127 {
 			return fmt.Sprintf("token %q", string(t))
