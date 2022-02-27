@@ -86,7 +86,7 @@ func parametersProc(dest *ast.Parameters, endToken tokenType) func(*parser) erro
 					}
 					t := p.nextToken()
 					switch t.tokenType {
-					case tokenWord, tokenInt, tokenReal:
+					case tokenWord, tokenInt, tokenReal, tokenString:
 						// OK
 					default:
 						return errors.Errorf("expected parameter default value, got %+v", t)

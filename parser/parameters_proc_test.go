@@ -140,6 +140,12 @@ func TestParameters(t *testing.T) {
 				{Names: []string{"Y"}, Type: "Real", DefaultValue: "-3.5"},
 			}},
 		},
+		{
+			"function WithStringDefaultValue(S: string = 'name');",
+			&ast.Function{Name: "WithStringDefaultValue", Parameters: ast.Parameters{
+				{Names: []string{"S"}, Type: "string", DefaultValue: "'name'"},
+			}},
+		},
 	}
 
 	unitTemplate := `unit U;
