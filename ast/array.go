@@ -4,8 +4,22 @@ package ast
 func (*Array) isTypeDeclaration() {}
 
 type Array struct {
+	Name string
+	ArrayExpr
+}
+
+func NewArray(name, typ string, indexTypes []IndexType) *Array {
+	return &Array{
+		Name: name,
+		ArrayExpr: ArrayExpr{
+			Type:       typ,
+			IndexTypes: indexTypes,
+		},
+	}
+}
+
+type ArrayExpr struct {
 	Dynamic    bool
-	Name       string
 	IndexTypes []IndexType
 	Type       string
 }
