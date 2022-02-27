@@ -68,7 +68,7 @@ func propertyProc(res *ast.Property) func(*parser) error {
 				}
 				t := p.nextToken()
 				switch t.tokenType {
-				case tokenWord, tokenInt, tokenReal:
+				case tokenWord, tokenInt, tokenReal, tokenString:
 				// OK
 				default:
 					return errors.Errorf("expected property default value, got %+v", t)

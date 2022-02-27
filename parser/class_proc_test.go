@@ -389,6 +389,10 @@ func TestParseClassProperties(t *testing.T) {
 			&ast.Property{Variable: ast.Variable{Name: "Tag", Type: "Longint"}, Reader: "FTag", Writer: "FTag", Default: "0"},
 		},
 		{
+			"property Name: string read FName write FName default 'User1';",
+			&ast.Property{Variable: ast.Variable{Name: "Name", Type: "string"}, Reader: "FName", Writer: "FName", Default: "'User1'"},
+		},
+		{
 			"class property Red: Integer read FRed write FRed;",
 			&ast.Property{Variable: ast.Variable{Name: "Red", Type: "Integer"}, Reader: "FRed", Writer: "FRed", Class: true},
 		},
