@@ -93,7 +93,11 @@ func (t *tokenizer) next() token {
 					break
 				}
 			}
-			haveType = tokenWord
+			if hasDot {
+				haveType = tokenReal
+			} else {
+				haveType = tokenInt
+			}
 		} else {
 			t.nextRune()
 		}
