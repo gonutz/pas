@@ -154,6 +154,24 @@ func (p *parser) parseSectionBlocks() ([]ast.FileSectionBlock, error) {
 				return nil, err
 			}
 			blocks = append(blocks, varBlock)
+		} else if p.seesWord("function") {
+			if err := p.eatWord("function"); err != nil {
+				return nil, err
+			}
+			f, err := p.parseFunctionDeclaration()
+			if err != nil {
+				return nil, err
+			}
+			blocks = append(blocks, f)
+		} else if p.seesWord("procedure") {
+			if err := p.eatWord("procedure"); err != nil {
+				return nil, err
+			}
+			f, err := p.parseFunctionDeclaration()
+			if err != nil {
+				return nil, err
+			}
+			blocks = append(blocks, f)
 		} else {
 			break
 		}
