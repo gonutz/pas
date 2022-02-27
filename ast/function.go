@@ -1,5 +1,7 @@
 package ast
 
+func (*Function) isFileSectionBlock() {}
+
 type Function struct {
 	Name       string
 	Parameters Parameters
