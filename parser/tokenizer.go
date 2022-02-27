@@ -1,6 +1,8 @@
 package parser
 
-import "unicode"
+import (
+	"unicode"
+)
 
 func newTokenizer(code []rune) tokenizer {
 	return tokenizer{
@@ -62,11 +64,31 @@ func (t *tokenizer) next() token {
 			for unicode.IsSpace(t.nextRune()) {
 			}
 			haveType = tokenWhiteSpace
-		} else if r == '_' || unicode.IsLetter(r) || isDigit(r) {
+		} else if r == '_' || unicode.IsLetter(r) {
 			word := func(r rune) bool {
 				return r == '_' || unicode.IsLetter(r) || isDigit(r)
 			}
 			for word(t.nextRune()) {
+			}
+			haveType = tokenWord
+		} else if isDigit(r) {
+			hasDot := false
+			for {
+				r := t.nextRune()
+				if isDigit(r) {
+					// OK
+				} else if r == '.' {
+					if t.seek(1) == '.' {
+						break
+					} else {
+						if hasDot {
+							break
+						}
+						hasDot = true
+					}
+				} else {
+					break
+				}
 			}
 			haveType = tokenWord
 		} else {
@@ -100,4 +122,11 @@ func (t *tokenizer) nextRune() rune {
 		t.cur++
 	}
 	return t.currentRune()
+}
+
+func (t *tokenizer) seek(n int) rune {
+	if t.cur+n < len(t.code) {
+		return t.code[t.cur+n]
+	}
+	return 0
 }
