@@ -27,15 +27,10 @@ func Test2RecordsInATypeBlock(t *testing.T) {
 					Kind: ast.InterfaceSection,
 					Blocks: []ast.FileSectionBlock{
 						ast.TypeBlock{
-							&ast.Record{
-								Name: "T1",
-								Members: []ast.ClassMember{
-									&ast.Field{Variable: *ast.NewVariable("A", "Integer")},
-								},
-							},
-							&ast.Record{
-								Name: "T2",
-							},
+							ast.NewRecord("T1",
+								&ast.Field{Variable: *ast.NewVariable("A", "Integer")},
+							),
+							ast.NewRecord("T2"),
 						},
 					},
 				},

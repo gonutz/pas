@@ -4,7 +4,19 @@ func (*Record) isTypeDeclaration() {}
 
 type Record struct {
 	Name string
-	// Sections []RecordSection
+	RecordExpr
+}
+
+func NewRecord(name string, members ...RecordMember) *Record {
+	return &Record{
+		Name: name,
+		RecordExpr: RecordExpr{
+			Members: members,
+		},
+	}
+}
+
+type RecordExpr struct {
 	Members []RecordMember
 }
 
