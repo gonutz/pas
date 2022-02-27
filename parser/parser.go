@@ -204,27 +204,26 @@ func (p *parser) parseTypeBlock() (ast.TypeBlock, error) {
 			return nil, err
 		}
 		if p.seesWord("class") {
-			class := &ast.Class{Name: identifier}
-			if err := classProc(class)(p); err != nil {
+			expr := &ast.ClassExpr{}
+			if err := classProc(expr)(p); err != nil {
 				return nil, err
 			}
-			res = append(res, class)
+			res = append(res, &ast.Type{Name: identifier, Type: expr})
 		} else if p.seesWord("record") {
-			record := &ast.Record{Name: identifier}
-			if err := recordProc(record)(p); err != nil {
+			expr := &ast.RecordExpr{}
+			if err := recordProc(expr)(p); err != nil {
 				return nil, err
 			}
-			res = append(res, record)
+			res = append(res, &ast.Type{Name: identifier, Type: expr})
 		} else if p.seesWords("packed", "array") {
-			arrayExpr := &ast.ArrayExpr{}
-			if err := arrayProc(arrayExpr)(p); err != nil {
+			expr := &ast.ArrayExpr{}
+			if err := arrayProc(expr)(p); err != nil {
 				return nil, err
 			}
 			if err := p.eat(';'); err != nil {
 				return nil, err
 			}
-			array := &ast.Array{Name: identifier, ArrayExpr: *arrayExpr}
-			res = append(res, array)
+			res = append(res, &ast.Type{Name: identifier, Type: expr})
 		} else {
 			return nil, errors.Errorf("expected type declaration, got %+v", p.peekToken())
 		}

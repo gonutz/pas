@@ -2,9 +2,11 @@ package ast
 
 func (TypeBlock) isFileSectionBlock() {}
 
-type TypeBlock []TypeDeclaration
-type TypeDeclaration interface {
-	isTypeDeclaration()
+type TypeBlock []*Type
+
+type Type struct {
+	Name string
+	Type TypeExpr
 }
 
 type TypeExpr interface {

@@ -2,7 +2,7 @@ package parser
 
 import "github.com/akm/delparser/ast"
 
-func recordProc(record *ast.Record) func(p *parser) error {
+func recordProc(record *ast.RecordExpr) func(p *parser) error {
 	appendFunc := func(p *parser) error {
 		f, err := p.parseFunctionDeclaration()
 		if err != nil {

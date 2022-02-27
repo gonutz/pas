@@ -2,22 +2,15 @@ package ast
 
 // https://docwiki.embarcadero.com/RADStudio/Alexandria/ja/%E3%82%AF%E3%83%A9%E3%82%B9%E3%81%A8%E3%82%AA%E3%83%96%E3%82%B8%E3%82%A7%E3%82%AF%E3%83%88%EF%BC%88Delphi%EF%BC%89
 
-func (*Class) isTypeDeclaration() {}
-
-type Class struct {
-	Name string
-	ClassExpr
-}
-
-func NewClass(name string, funcs ...func(*ClassExpr)) *Class {
-	c := &Class{Name: name}
+func NewClass(name string, funcs ...func(*ClassExpr)) *Type {
+	expr := &ClassExpr{}
 	for _, f := range funcs {
-		f(&c.ClassExpr)
+		f(expr)
 	}
-	return c
+	return &Type{Name: name, Type: expr}
 }
 
-func NewClassWithSuperClasses(name string, superClasses []string, funcs ...func(*ClassExpr)) *Class {
+func NewClassWithSuperClasses(name string, superClasses []string, funcs ...func(*ClassExpr)) *Type {
 	funcs = append(funcs, func(c *ClassExpr) {
 		c.SuperClasses = superClasses
 	})
@@ -34,7 +27,7 @@ type ClassExpr struct {
 	Sealed       bool
 }
 
-func (c *Class) AppendMemberToCurrentSection(member ClassMember) {
+func (c *ClassExpr) AppendMemberToCurrentSection(member ClassMember) {
 	if len(c.Sections) == 0 {
 		c.NewSection(DefaultPublished)
 	}
@@ -42,7 +35,7 @@ func (c *Class) AppendMemberToCurrentSection(member ClassMember) {
 	c.Sections[i].Members = append(c.Sections[i].Members, member)
 }
 
-func (c *Class) NewSection(v Visibility) {
+func (c *ClassExpr) NewSection(v Visibility) {
 	c.Sections = append(c.Sections, ClassSection{Visibility: v})
 }
 

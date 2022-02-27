@@ -23,9 +23,7 @@ func TestParseEmptyClass(t *testing.T) {
 					Kind: ast.InterfaceSection,
 					Blocks: []ast.FileSectionBlock{
 						ast.TypeBlock{
-							&ast.Class{
-								Name: "C",
-							},
+							ast.NewClass("C"),
 						},
 					},
 				},
