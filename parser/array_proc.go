@@ -33,7 +33,7 @@ func arrayProcessor(array *ast.Array) func(p *parser) error {
 					if ptnDigits.MatchString(token.text) {
 						low, err := strconv.Atoi(token.text)
 						if err != nil {
-							return errors.Wrapf(err, "invalid array index %q", token.text)
+							return errors.Wrapf(err, "invalid array index token %+v", token)
 						}
 						if err := p.eats('.', '.'); err != nil {
 							return err
@@ -41,7 +41,7 @@ func arrayProcessor(array *ast.Array) func(p *parser) error {
 						token := p.nextToken()
 						high, err := strconv.Atoi(token.text)
 						if err != nil {
-							return errors.Wrapf(err, "invalid array index %q", token.text)
+							return errors.Wrapf(err, "invalid array index token %+v", token)
 						}
 						indexType = &ast.NumRange{Packed: packed, Low: low, High: high}
 					} else {
