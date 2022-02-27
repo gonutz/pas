@@ -194,19 +194,19 @@ func (p *parser) parseTypeBlock() (ast.TypeBlock, error) {
 		}
 		if p.seesWord("class") {
 			class := &ast.Class{Name: identifier}
-			if err := classProcessor(class)(p); err != nil {
+			if err := classProc(class)(p); err != nil {
 				return nil, err
 			}
 			res = append(res, class)
 		} else if p.seesWord("record") {
 			record := &ast.Record{Name: identifier}
-			if err := recordProcessor(record)(p); err != nil {
+			if err := recordProc(record)(p); err != nil {
 				return nil, err
 			}
 			res = append(res, record)
 		} else if p.seesWords("packed", "array") {
 			array := &ast.Array{Name: identifier}
-			if err := arrayProcessor(array)(p); err != nil {
+			if err := arrayProc(array)(p); err != nil {
 				return nil, err
 			}
 			res = append(res, array)
@@ -241,7 +241,7 @@ func (p *parser) parseFunctionDeclaration() (res *ast.Function, rerr error) {
 		return nil, err
 	}
 	f := &ast.Function{Name: name}
-	if err := functionProcessor(f)(p); err != nil {
+	if err := functionProc(f)(p); err != nil {
 		return nil, err
 	}
 	return f, nil

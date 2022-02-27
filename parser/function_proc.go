@@ -2,7 +2,7 @@ package parser
 
 import "github.com/akm/pas/ast"
 
-func functionProcessor(f *ast.Function) func(*parser) error {
+func functionProc(f *ast.Function) func(*parser) error {
 	return func(p *parser) error {
 		if p.sees('(') {
 			err := p.startEndToken('(', ')', func() (err error) {

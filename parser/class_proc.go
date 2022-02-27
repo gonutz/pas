@@ -2,7 +2,7 @@ package parser
 
 import "github.com/akm/pas/ast"
 
-func classProcessor(class *ast.Class) func(p *parser) error {
+func classProc(class *ast.Class) func(p *parser) error {
 	newSection := func(visibility ast.Visibility) func(p *parser) error {
 		return func(p *parser) error {
 			class.NewSection(visibility)
