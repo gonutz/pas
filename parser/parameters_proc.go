@@ -1,6 +1,9 @@
 package parser
 
-import "github.com/akm/pas/ast"
+import (
+	"github.com/akm/pas/ast"
+	"github.com/pkg/errors"
+)
 
 func parametersProc(dest *ast.Parameters, endToken tokenType) func(*parser) error {
 	eatRef := func(p *parser) error {
@@ -77,6 +80,16 @@ func parametersProc(dest *ast.Parameters, endToken tokenType) func(*parser) erro
 					param.Type = pt
 				}
 
+				if p.sees('=') {
+					if err := p.eat('='); err != nil {
+						return err
+					}
+					t := p.nextToken()
+					if t.tokenType != tokenWord {
+						return errors.Errorf("expected parameter default value, got %s", t.text)
+					}
+					param.DefaultValue = t.text
+				}
 			}
 			res = append(res, param)
 			if p.sees(';') {
