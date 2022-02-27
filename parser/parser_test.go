@@ -98,6 +98,27 @@ func TestInterfaceSection(t *testing.T) {
 				ast.VarBlock{{Name: "S", Type: "string"}},
 			},
 		},
+		{
+			"var blocks and function",
+			`var I: Integer;
+			function Bar: string;`,
+			[]ast.FileSectionBlock{
+				ast.VarBlock{{Name: "I", Type: "Integer"}},
+				&ast.Function{Name: "Bar", Returns: "string"},
+			},
+		},
+		{
+			"var blocks and procedure",
+			`var I: Integer;
+			procedure B(var S: string; X: Integer);`,
+			[]ast.FileSectionBlock{
+				ast.VarBlock{{Name: "I", Type: "Integer"}},
+				&ast.Function{Name: "B", Parameters: ast.Parameters{
+					{Names: []string{"S"}, Type: "string", Qualifier: ast.Var},
+					{Names: []string{"X"}, Type: "Integer"},
+				}},
+			},
+		},
 	}
 
 	unitTemplate := `unit U;
