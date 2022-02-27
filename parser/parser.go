@@ -206,10 +206,11 @@ func (p *parser) parseTypeBlock() (ast.TypeBlock, error) {
 			}
 			res = append(res, record)
 		} else if p.seesWords("packed", "array") {
-			array := &ast.Array{Name: identifier}
-			if err := arrayProc(array)(p); err != nil {
+			arrayExpr := &ast.ArrayExpr{}
+			if err := arrayProc(arrayExpr)(p); err != nil {
 				return nil, err
 			}
+			array := &ast.Array{Name: identifier, ArrayExpr: *arrayExpr}
 			res = append(res, array)
 		} else {
 			return nil, errors.Errorf("expected type declaration, got %+v", p.peekToken())
