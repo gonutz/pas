@@ -56,6 +56,15 @@ func TestParameters(t *testing.T) {
 			&ast.Function{Name: "UpdateRecords"},
 		},
 		{
+			// https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Procedures_and_Functions_(Delphi)
+			"function WithoutRoundBrackets: Integer;",
+			&ast.Function{Name: "WithoutRoundBrackets", Returns: "Integer"},
+		},
+		{
+			"function WithBlankRoundBrackets(): Integer;",
+			&ast.Function{Name: "WithBlankRoundBrackets", Returns: "Integer", Parameters: ast.Parameters{}},
+		},
+		{
 			"function DoubleByValue(X: Integer): Integer;",
 			&ast.Function{Name: "DoubleByValue", Returns: "Integer", Parameters: ast.Parameters{
 				{Names: []string{"X"}, Type: "Integer"},
