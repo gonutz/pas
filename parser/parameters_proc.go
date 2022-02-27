@@ -63,7 +63,20 @@ func parametersProc(dest *ast.Parameters, endToken tokenType) func(*parser) erro
 				if err != nil {
 					return err
 				}
-				param.Type = pt
+				if pt == "array" {
+					if err := p.eatWord("of"); err != nil {
+						return err
+					}
+					pt, err := p.qualifiedIdentifier("open array parameter type")
+					if err != nil {
+						return err
+					}
+					param.OpenArray = true
+					param.Type = pt
+				} else {
+					param.Type = pt
+				}
+
 			}
 			res = append(res, param)
 			if p.sees(';') {
