@@ -3,7 +3,7 @@ package ast
 func NewRecord(name string, members ...RecordMember) *Type {
 	return &Type{
 		Name: name,
-		Type: &RecordExpr{
+		Expr: &RecordExpr{
 			Members: members,
 		},
 	}

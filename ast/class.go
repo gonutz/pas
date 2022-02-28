@@ -7,7 +7,7 @@ func NewClass(name string, funcs ...func(*ClassExpr)) *Type {
 	for _, f := range funcs {
 		f(expr)
 	}
-	return &Type{Name: name, Type: expr}
+	return &Type{Name: name, Expr: expr}
 }
 
 func NewClassWithSuperClasses(name string, superClasses []string, funcs ...func(*ClassExpr)) *Type {

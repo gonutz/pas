@@ -6,7 +6,7 @@ type TypeBlock []*Type
 
 type Type struct {
 	Name string
-	Type TypeExpr
+	Expr TypeExpr
 }
 
 type TypeExpr interface {

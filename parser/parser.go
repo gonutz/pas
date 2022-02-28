@@ -207,7 +207,7 @@ func (p *parser) parseTypeBlock() (ast.TypeBlock, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, &ast.Type{Name: identifier, Type: expr})
+		res = append(res, &ast.Type{Name: identifier, Expr: expr})
 		if p.sees(tokenWord) && p.seesReservedWord() {
 			break
 		}

@@ -5,7 +5,7 @@ package ast
 func NewArray(name, typ string, indexTypes []IndexType) *Type {
 	return &Type{
 		Name: name,
-		Type: &ArrayExpr{
+		Expr: &ArrayExpr{
 			Type:       typ,
 			IndexTypes: indexTypes,
 		},
