@@ -237,6 +237,15 @@ func (p *parser) parseTypeExpr() (ast.TypeExpr, error) {
 			return nil, err
 		}
 		return expr, nil
+	} else if p.sees('(') {
+		expr := &ast.EnumExpr{}
+		if err := enumProc(expr)(p); err != nil {
+			return nil, err
+		}
+		if err := p.eat(';'); err != nil {
+			return nil, err
+		}
+		return expr, nil
 	} else {
 		return nil, errors.Errorf("expected type expression, got %+v", p.peekToken())
 	}
@@ -403,6 +412,14 @@ func (p *parser) seesWords(texts ...string) bool {
 func (p *parser) seesReservedWord() bool {
 	t := p.peekToken()
 	return t.tokenType == tokenWord && isReservedWord(strings.ToLower(t.text))
+}
+
+func (p *parser) take(typ tokenType) (*token, error) {
+	t := p.nextToken()
+	if t.tokenType != typ {
+		return nil, p.tokenError(t, typ.String())
+	}
+	return &t, nil
 }
 
 func (p *parser) eat(typ tokenType) error {
