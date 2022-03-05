@@ -301,6 +301,12 @@ func (p *parser) parseVariableDeclaration() (*ast.Variable, error) {
 			return nil, err
 		}
 		r.Type = arrayExpr
+	} else if p.sees('(') {
+		enumExpr := &ast.EnumExpr{}
+		if err := enumProc(enumExpr)(p); err != nil {
+			return nil, err
+		}
+		r.Type = enumExpr
 	} else {
 		typ, err := p.qualifiedIdentifier("type name")
 		if err != nil {
